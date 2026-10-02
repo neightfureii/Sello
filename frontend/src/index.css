@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sello-blue: #3770E6;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background-color: #f3f4f6; /* matches Tailwind's bg-gray-100 */
+}
+
+.form-grid {
+  display: grid;
+  gap: 8px;
+  max-width: 320px;
+  margin-bottom: 24px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+th,
+td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.error { color: crimson; }
+.success { color: seagreen; }
+.low { color: crimson; font-weight: 600; }

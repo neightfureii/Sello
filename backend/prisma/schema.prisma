@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================
+// ENUMs
+// ==========================================
+
+enum Role {
+  admin
+  manager
+  cashier
+}
+
+enum ShopType {
+  meat
+  retail
+  food
+  books
+  pet_supplies
+  office_supplies
+  grocery
+  hardware
+
+  @@map("shop_type")
+}
+
+enum PaymentMethod {
+  cash
+  card
+  bank_transfer
+
+  @@map("payment_method")
+}
+
+enum PaymentSource {
+  shop_cash
+  shop_bank
+  owner_cash
+
+  @@map("payment_source")
+}
+
+enum SaleStatus {
+  completed
+  reverted
+
+  @@map("sale_status")
+}
+
+enum UnitType {
+  g
+  kg
+  pcs
+  l
+  ml
+  dozen
+
+  @@map("unit_type")
+}
+
+// ==========================================
+// Models
+// ==========================================
+
+model User {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String   @map("full_name")
+  role         Role
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  sales    Sale[]
+  expenses Expense[]
+
+  @@map("users")
+}
+
+model Shop {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(255)
+  location      String?  @db.VarChar(255)
+  type          ShopType
+  imageUrl      String?  @map("image_url")
+  imageCldPubId String?  @map("image_cld_pub_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  stockRecords StockRecord[]
+  stocks       Stock[]
+  sales        Sale[]
+  expenses     Expense[]
+
+  @@map("shops")
+}
+
+model Category {
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String   @db.VarChar(255)
+  description   String?  @db.VarChar(255)
+  imageUrl      String?  @map("image_url")
+  imageCldPubId String?  @map("image_cld_pub_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String   @db.VarChar(255)
+  minStockAllowed Int      @default(0) @map("min_stock_allowed")
+  unitPrice       Decimal  @default(0.00) @map("unit_price") @db.Decimal(10, 2)
+  unit            UnitType @default(pcs)
+  imageUrl        String?  @map("image_url")
+  imageCldPubId   String?  @map("image_cld_pub_id")
+  categoryId      String   @map("category_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  stocks   Stock[]
+
+  @@map("products")
+}
+
+model StockRecord {
+  id             String        @id @default(uuid()) @db.Uuid
+  shopId         String        @map("shop_id") @db.Uuid
+  stockReference String        @map("stock_reference") @db.VarChar(50)
+  paymentSource  PaymentSource @default(shop_cash) @map("payment_source")
+  dateAcquired   DateTime      @default(now()) @map("date_acquired")
+  status         SaleStatus    @default(completed)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  shop   Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  stocks Stock[]
+
+  @@map("stock_records")
+}
+
+model Stock {
+  id               String    @id @default(uuid()) @db.Uuid
+  stockRecordId    String    @map("stock_record_id") @db.Uuid
+  productId        String    @map("product_id") @db.Uuid
+  shopId           String    @map("shop_id") @db.Uuid
+  mfd              DateTime?
+  exp              DateTime?
+  dateAcquired     DateTime  @default(now()) @map("date_acquired")
+  unitCost         Decimal   @default(0.00) @map("unit_cost") @db.Decimal(10, 2)
+  quantityReceived Decimal   @default(0.00) @map("quantity_received") @db.Decimal(10, 2)
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  stockRecord StockRecord @relation(fields: [stockRecordId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  shop        Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  saleItems   SaleItem[]
+
+  @@map("stocks")
+}
+
+model Sale {
+  id            String        @id @default(uuid()) @db.Uuid
+  userId        String        @map("user_id") @db.Uuid
+  shopId        String        @map("shop_id") @db.Uuid
+  billNo        Int           @default(autoincrement()) @map("bill_no")
+  totalAmount   Decimal       @default(0.00) @map("total_amount") @db.Decimal(10, 2)
+  discount      Decimal       @default(0.00) @map("discount") @db.Decimal(10, 2)
+  paymentMethod PaymentMethod @default(cash) @map("payment_method")
+  status        SaleStatus    @default(completed)
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shop      Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  saleItems SaleItem[]
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id            String   @id @default(uuid()) @db.Uuid
+  saleId        String   @map("sale_id") @db.Uuid
+  stockId       String   @map("stock_id") @db.Uuid
+  quantity      Int      @default(0)
+  unitPriceSold Decimal  @default(0.00) @map("unit_price_sold") @db.Decimal(10, 2)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  sale  Sale  @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  stock Stock @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  @@map("sale_items")
+}
+
+model ExpenseReason {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @db.VarChar(255)
+  description String?  @db.VarChar(255)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  expenses Expense[]
+
+  @@map("expense_reasons")
+}
+
+model Expense {
+  id          String   @id @default(uuid()) @db.Uuid
+  amount      Decimal  @default(0.00) @db.Decimal(10, 2)
+  reasonId    String   @map("reason_id") @db.Uuid
+  notes       String?  @db.VarChar(255)
+  expenseDate DateTime @default(now()) @map("expense_date")
+  userId      String   @map("user_id") @db.Uuid
+  shopId      String   @map("shop_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  reason ExpenseReason @relation(fields: [reasonId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shop   Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@map("expenses")
+}
