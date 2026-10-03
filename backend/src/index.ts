@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import { config } from './config.js';
 import authRoutes from './routes/auth.js';
 import productRoutes from './routes/products.js';
+import categoryRoutes from './routes/categories.js';
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get('/api/health', (_req, res) => {
 });
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/categories', categoryRoutes);
 
 // Express 5 forwards async errors here automatically
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {

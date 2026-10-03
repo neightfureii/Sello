@@ -7,13 +7,22 @@ export interface User {
   role: Role;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  description: string;
+  imageUrl?: string;
+}
+
 export interface Product {
   id: number;
-  sku: string;
   name: string;
-  price: string;
-  stockQty: number;
-  reorderLevel: number;
+  unitPrice: number;
+  unit: string;
+  minStockAllowed: number;
+  imageUrl?: string;
+  categoryId: string;
+  category?: Category;
 }
 
 export async function api<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
