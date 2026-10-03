@@ -1,17 +1,16 @@
 import { Router } from "express";
 import { prisma } from "../db/prisma.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { Prisma } from "../generated/prisma/client.js";
 import { upload } from "../middleware/upload.js";
 
 const router = Router();
 router.use(requireAuth);
 
 router.get("/", async (_req, res) => {
-  const products = await prisma.product.findMany({
+  const categories = await prisma.category.findMany({
     orderBy: { name: "asc" },
   });
-  res.json({ products });
+  res.json({ categories });
 });
 
 router.post(
@@ -21,24 +20,20 @@ router.post(
   async (req, res) => {
     const imageUrl = req.file?.path || null;
     const imageCldPubId = req.file?.filename || null;
-    const { name, unitPrice, unit, minStockAllowed, categoryId } =
-      req.body ?? {};
+    const { name, description } = req.body ?? {};
 
     try {
-      const newProduct = await prisma.product.create({
+      const newCategory = await prisma.category.create({
         data: {
           name,
-          unitPrice: Number(unitPrice || 0),
-          minStockAllowed: Number(minStockAllowed || 0),
-          categoryId,
-          unit,
+          description,
           imageUrl, // Storing the URL string
           imageCldPubId, // Storing the Cloudinary Public ID for future deletions/updates
         },
       });
-      res.status(201).json({ newProduct });
+      res.status(201).json({ newCategory });
     } catch (err) {
-      res.status(500).json({ error: "Failed to create new product" });
+      res.status(500).json({ error: "Failed to create new category" });
     }
   },
 );

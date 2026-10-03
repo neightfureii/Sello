@@ -7,6 +7,7 @@ import InventoryPage from './pages/InventoryPage';
 import UsersPage from './pages/UsersPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AddProductPage from './pages/AddProductPage';
+import AddCategoryPage from './pages/AddCategoryPage';
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
           { index: true, element: <DashboardPage /> },
           { path: 'products', element: <InventoryPage /> },
           { path: 'products/add-product', element: <AddProductPage /> },
+          { path: 'products/add-category', element: <AddCategoryPage /> },
           {
             element: <RequireRole roles={['admin']} />,
             children: [{ path: 'users', element: <UsersPage /> }],
