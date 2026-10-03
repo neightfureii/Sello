@@ -75,12 +75,15 @@ model User {
   fullName     String   @map("full_name")
   role         Role
   isActive     Boolean  @default(true) @map("is_active")
+  shopId       String  @map("shop_id") @db.Uuid
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
 
   // Relations
   sales    Sale[]
   expenses Expense[]
+  shop     Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
 
   @@map("users")
 }
@@ -99,6 +102,8 @@ model Shop {
   stockRecords StockRecord[]
   stocks       Stock[]
   sales        Sale[]
+  products     Product[]
+  users        User[]
   expenses     Expense[]
 
   @@map("shops")
@@ -128,12 +133,14 @@ model Product {
   imageUrl        String?  @map("image_url")
   imageCldPubId   String?  @map("image_cld_pub_id")
   categoryId      String   @map("category_id") @db.Uuid
+  shopId      String   @map("shop_id") @db.Uuid
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
 
   // Relations
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   stocks   Stock[]
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
   @@map("products")
 }

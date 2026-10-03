@@ -25,6 +25,14 @@ export interface Product {
   category?: Category;
 }
 
+export interface CartItem {
+  id: string;
+  product: Product;
+  quantity: number;
+  displayUnit: string;
+  discount: number;
+}
+
 export async function api<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`/api${path}`, {
     credentials: 'include',

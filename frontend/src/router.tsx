@@ -8,6 +8,9 @@ import UsersPage from './pages/UsersPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AddProductPage from './pages/AddProductPage';
 import AddCategoryPage from './pages/AddCategoryPage';
+import ProfilePage from './pages/ProfilePage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import AccountsPage from './pages/AccountsPage';
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -25,6 +28,9 @@ export const router = createBrowserRouter([
             element: <RequireRole roles={['admin']} />,
             children: [{ path: 'users', element: <UsersPage /> }],
           },
+          { path: 'profile', element: <ProfilePage /> },
+          { path: 'analytics', element: <AnalyticsPage /> },
+          { path: 'accounts', element: <AccountsPage /> },
         ],
       },
     ],
