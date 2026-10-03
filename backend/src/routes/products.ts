@@ -23,6 +23,14 @@ router.post(
     const imageCldPubId = req.file?.filename || null;
     const { name, unitPrice, unit, minStockAllowed, categoryId } =
       req.body ?? {};
+    const shopId = (req as any).user?.shopId;
+    console.log(shopId);
+
+    if (!shopId) {
+      return res
+        .status(400)
+        .json({ error: "User is not associated with any shop" });
+    }
 
     try {
       const newProduct = await prisma.product.create({
@@ -34,6 +42,7 @@ router.post(
           unit,
           imageUrl, // Storing the URL string
           imageCldPubId, // Storing the Cloudinary Public ID for future deletions/updates
+          shopId,
         },
       });
       res.status(201).json({ newProduct });

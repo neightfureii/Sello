@@ -1,21 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type Category, type Product } from "../api";
+import { api, type Category, type Product, type CartItem } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import { Search, History, X } from "lucide-react";
-
-interface CartItem {
-  id: string;
-  product: Product;
-  quantity: number;
-}
+import ProductModal from "../components/ProductModal";
+import PaymentModal from "../components/PaymentModal";
 
 export default function DashboardPage() {
   const { user } = useAuth();
+
+  const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [productModalOpen, setProductModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
   const loadData = useCallback(() => {
     // Fetch products
@@ -47,6 +50,57 @@ export default function DashboardPage() {
       activeCategory === "All" || (p as any).categoryId === activeCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const getNormalizedQuantity = (
+    quantity: number,
+    unit: string,
+    productUnit: string,
+  ) => {
+    if (unit === "g" && productUnit === "kg") {
+      return quantity / 1000;
+    } else if (unit === "kg" && productUnit === "g") {
+      return quantity * 1000;
+    }
+    return quantity;
+  };
+
+  const handleAddToCart = (
+    quantity: number,
+    unit: string,
+    discount: number,
+  ) => {
+    if (!selectedProduct) return;
+
+    setCartItems((prev) => [
+      ...prev,
+      {
+        id: `${selectedProduct.id}-${Date.now()}`,
+        product: selectedProduct,
+        quantity: getNormalizedQuantity(quantity, unit, selectedProduct.unit),
+        displayUnit: unit,
+        discount,
+      },
+    ]);
+  };
+
+  const removeFromCart = (id: string) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const subtotal = cartItems.reduce((acc, item) => {
+    const itemTotal =
+      item.quantity * Number(item.product.unitPrice || 0) - item.discount;
+    return acc + Math.max(0, itemTotal);
+  }, 0);
+
+  const handleCompletePayment = (paymentMethod: string, cashGiven: number) => {
+    console.log(`Payment method: ${paymentMethod}, Cash given: ${cashGiven}`);
+    
+    // add new sales function and query to backend to save the sale and update stock
+
+    setCartItems([]);
+    setPaymentModalOpen(false);
+  };
 
   return (
     <div className="flex flex-col lg:flex-row h-full gap-6">
@@ -124,9 +178,13 @@ export default function DashboardPage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
             {products.map((product) => (
-              <div
+              <button
                 key={product.id}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => {
+                  setProductModalOpen(true);
+                  setSelectedProduct(product);
+                }}
               >
                 <div className="h-28 w-full bg-gray-100 relative">
                   <img
@@ -148,7 +206,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -188,7 +246,7 @@ export default function DashboardPage() {
 
           {/* Cart Items List */}
           <div className="flex flex-col gap-2 overflow-y-auto max-h-[400px] lg:flex-1 lg:max-h-none lg:min-h-[250px] pr-1">
-            {/* {mockCart.map((item) => (
+            {cartItems.map((item) => (
               <div
                 key={item.id}
                 className="bg-[#e5ecf6] rounded-2xl p-2 pr-3 flex items-center gap-3 relative"
@@ -204,7 +262,7 @@ export default function DashboardPage() {
                   </span>
                   <div className="flex justify-between items-center mt-0.5">
                     <span className="text-gray-600 text-[10px] font-medium">
-                      Rs.{item.product.price} /{item.product.unit}
+                      Rs.{item.product.unitPrice} /{item.product.unit}
                     </span>
                     <span className="text-gray-700 text-[11px] font-semibold">
                       Qty : {item.quantity}{" "}
@@ -219,27 +277,24 @@ export default function DashboardPage() {
                   <span className="font-extrabold text-gray-900 text-[12px] mt-1">
                     Rs.{" "}
                     {(
-                      Number(item.quantity) * Number(item.product.price || 0)
+                      Number(item.quantity) *
+                      Number(item.product.unitPrice || 0)
                     ).toFixed(2)}
                   </span>
                 </div>
               </div>
-            ))} */}
+            ))}
           </div>
 
           {/* Totals Summary */}
           <div className="mt-5 pt-4 border-t border-gray-300 flex flex-col gap-1.5">
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600 font-semibold text-[13px]">
-                Bill No
-              </span>
-              <span className="text-gray-700 font-bold text-[13px]">0001</span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600 font-semibold text-[13px]">
                 Product Count
               </span>
-              <span className="text-gray-700 font-bold text-[13px]">02</span>
+              <span className="text-gray-700 font-bold text-[13px]">
+                {cartItems.length}
+              </span>
             </div>
             <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600 font-semibold text-[13px]">
@@ -256,13 +311,13 @@ export default function DashboardPage() {
               {/* Dynamic total calculation based on mock data */}
               <span className="text-gray-900 font-extrabold text-[16px]">
                 Rs.
-                {/* {mockCart
+                {cartItems
                   .reduce(
                     (acc, item) =>
-                      acc + item.quantity * Number(item.product.price || 0),
+                      acc + item.quantity * Number(item.product.unitPrice || 0),
                     0,
                   )
-                  .toFixed(2)} */}
+                  .toFixed(2)}
               </span>
             </div>
 
@@ -271,13 +326,41 @@ export default function DashboardPage() {
               <button className="flex-1 border border-[#8daff2] bg-white text-sello-blue font-semibold py-3 rounded-full hover:bg-blue-50 transition-colors text-[15px]">
                 Cancel
               </button>
-              <button className="flex-1 bg-[#3770E6] text-white font-semibold py-3 rounded-full hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 text-[15px]">
+              <button
+                onClick={() => setPaymentModalOpen(true)}
+                className="flex-1 bg-[#3770E6] text-white font-semibold py-3 rounded-full hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 text-[15px]"
+              >
                 Place Order
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Product Modal */}
+      {productModalOpen && selectedProduct && (
+        <ProductModal
+          product={selectedProduct}
+          onClose={() => {
+            setProductModalOpen(false);
+            setSelectedProduct(null);
+          }}
+          isOpen={productModalOpen}
+          onAdd={handleAddToCart}
+        />
+      )}
+
+      {/* Payment Modal */}
+      {paymentModalOpen && (
+        <PaymentModal
+          totalAmount={subtotal}
+          onClose={() => {
+            setPaymentModalOpen(false);
+          }}
+          isOpen={paymentModalOpen}
+          onComplete={handleCompletePayment}
+        />
+      )}
     </div>
   );
 }

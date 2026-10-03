@@ -60,9 +60,9 @@ export default function InventoryPage() {
               <div className="text-3xl font-extrabold text-gray-900 mt-2">
                 1,560
               </div>
-              <div className="text-xs text-gray-500 font-medium mt-1">
+              {/* <div className="text-xs text-gray-500 font-medium mt-1">
                 Latest Update: 21/07/2026
-              </div>
+              </div> */}
             </div>
             <Button
               className="mt-6 flex items-center justify-center gap-2 text-sm"
@@ -77,9 +77,9 @@ export default function InventoryPage() {
             <div>
               <span className="text-sm font-bold text-gray-500">Products</span>
               <div className="text-3xl font-extrabold text-gray-900 mt-2">
-                {products.length || 245}
+                {products.length || 0}
               </div>
-              <div className="flex flex-col gap-0.5 mt-1 text-xs text-gray-500 font-medium">
+              {/* <div className="flex flex-col gap-0.5 mt-1 text-xs text-gray-500 font-medium">
                 <span>
                   Active Products:{" "}
                   <strong className="text-gray-800">230</strong>
@@ -88,7 +88,7 @@ export default function InventoryPage() {
                   Low Stock Products:{" "}
                   <strong className="text-red-600">15</strong>
                 </span>
-              </div>
+              </div> */}
             </div>
             <Button
               className="mt-6 flex items-center justify-center gap-2 text-sm"
@@ -107,7 +107,7 @@ export default function InventoryPage() {
               <div className="text-3xl font-extrabold text-gray-900 mt-2">
                 {categories.length || 0}
               </div>
-              <div className="flex flex-col gap-0.5 mt-1 text-xs text-gray-500 font-medium">
+              {/* <div className="flex flex-col gap-0.5 mt-1 text-xs text-gray-500 font-medium">
                 <span>
                   Active Categories:{" "}
                   <strong className="text-gray-800">16</strong>
@@ -115,7 +115,7 @@ export default function InventoryPage() {
                 <span>
                   Empty Categories: <strong className="text-gray-800">2</strong>
                 </span>
-              </div>
+              </div> */}
             </div>
             <Button
               className="mt-6 flex items-center justify-center gap-2 text-sm"

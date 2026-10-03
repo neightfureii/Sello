@@ -4,8 +4,9 @@ import { config } from '../config.js';
 import type { Role } from '../generated/prisma/client.js';
 
 export interface AuthUser {
-  sub: number;
+  sub: string;
   role: Role;
+  shopId: string;
 }
 
 // Tell TypeScript that req.user exists after requireAuth runs
