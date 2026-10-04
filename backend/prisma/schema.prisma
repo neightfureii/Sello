@@ -75,6 +75,8 @@ model User {
   fullName     String   @map("full_name")
   role         Role
   isActive     Boolean  @default(true) @map("is_active")
+  imageUrl      String?  @map("image_url")
+  imageCldPubId String?  @map("image_cld_pub_id")
   shopId       String  @map("shop_id") @db.Uuid
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
@@ -188,7 +190,7 @@ model Sale {
   id            String        @id @default(uuid()) @db.Uuid
   userId        String        @map("user_id") @db.Uuid
   shopId        String        @map("shop_id") @db.Uuid
-  billNo        Int           @default(autoincrement()) @map("bill_no")
+  billNo        String        @map("bill_no") @db.VarChar(50)
   totalAmount   Decimal       @default(0.00) @map("total_amount") @db.Decimal(10, 2)
   discount      Decimal       @default(0.00) @map("discount") @db.Decimal(10, 2)
   paymentMethod PaymentMethod @default(cash) @map("payment_method")

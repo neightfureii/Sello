@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type Category, type Product, type CartItem } from "../api";
+import { api, type Category, type Product, type StockCartItem } from "../api";
 import { useAuth } from "../auth/AuthContext";
-import { Search, History, X, ShoppingBag, User2 } from "lucide-react";
-import ProductModal from "../components/ProductModal";
-import PaymentModal from "../components/PaymentModal";
-import { useToast } from "../context/ToastContext";
+import { Search, History, X } from "lucide-react";
+import BackButton from "../components/BackButton";
+import ProductStockModal from "../components/ProductStockModal";
+import AddStockRecordModal from "../components/AddStockRecordModal";
 
-export default function DashboardPage() {
+export default function AddStockPage() {
   const { user } = useAuth();
-  const { showToast } = useToast();
 
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
@@ -16,11 +15,11 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [productModalOpen, setProductModalOpen] = useState(false);
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [productStockModalOpen, setProductStockModalOpen] = useState(false);
+  const [addStockRecordModalOpen, setAddStockRecordModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<StockCartItem[]>([]);
 
   const loadData = useCallback(() => {
     // Fetch products
@@ -70,6 +69,7 @@ export default function DashboardPage() {
     quantity: number,
     unit: string,
     discount: number,
+    unitCost: number,
   ) => {
     if (!selectedProduct) return;
 
@@ -81,6 +81,7 @@ export default function DashboardPage() {
         quantity: getNormalizedQuantity(quantity, unit, selectedProduct.unit),
         displayUnit: unit,
         discount,
+        unitCost,
       },
     ]);
   };
@@ -95,26 +96,21 @@ export default function DashboardPage() {
     return acc + Math.max(0, itemTotal);
   }, 0);
 
-  const handleCompletePayment = async (
-    paymentMethod: string,
-    cashGiven: number,
-  ) => {
+  const handleAddStockRecord = async (paymentMethod: string) => {
     setError("");
 
     // Map cart items into the shape expected by the backend
     const payload = {
-      paymentMethod: paymentMethod,
-      totalAmount: subtotal,
-      discount: 0, // Assuming no overall discount for now.. TODO: Add overall discount handling if needed
+      paymentSource: paymentMethod,
       items: cartItems.map((item) => ({
         productId: item.product.id,
         quantity: item.quantity,
-        unitPrice: item.product.unitPrice,
+        unitCost: item.unitCost,
       })),
     };
 
     try {
-      const response = await fetch("http://localhost:4000/api/sales", {
+      const response = await fetch("http://localhost:4000/api/stock-records", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,15 +119,13 @@ export default function DashboardPage() {
         credentials: "include",
       });
 
-      if (!response.ok) throw new Error("Failed to complete sale");
+      if (!response.ok) throw new Error("Failed to save stock record");
 
       // Reset cart and close modal upon success
-      showToast("Order placed and payment successfully recorded!", "success");
       setCartItems([]);
-      setPaymentModalOpen(false);
+      setAddStockRecordModalOpen(false);
     } catch (err: any) {
-      setError(err.message || "Could not complete order");
-      showToast(err.message || "Could not complete order", "error");
+      setError(err.message || "Could not complete restock operation");
     }
   };
 
@@ -139,35 +133,13 @@ export default function DashboardPage() {
     <div className="flex flex-col lg:flex-row h-full gap-6">
       {/* LEFT COLUMN: Products Section */}
       <div className="flex-1 flex flex-col gap-6">
-        {/* Desktop Shop Header (Hidden on Mobile) */}
-        <div className="hidden lg:flex items-center gap-4">
-          {user?.shop?.imageUrl ? (
-            <img
-              src={user.shop.imageUrl}
-              alt="Shop Avatar"
-              className="w-12 h-12 rounded-full object-cover shadow-sm border border-gray-200"
-            />
-          ) : (
-            <ShoppingBag />
-          )}
-          <h1 className="text-2xl font-bold text-gray-900">
-            {user?.shop?.name}
-          </h1>
+        <div className="flex items-center gap-4 top-0 sticky backdrop-blur-sm bg-white/80 rounded-full p-4">
+          <BackButton />
+          <h3 className="font-bold text-gray-900 text-base">Add New Stock</h3>
         </div>
 
         {/* Unified Search Row (Adapts for Mobile) */}
         <div className="flex items-center gap-3 w-full">
-          {/* Mobile Shop Avatar */}
-          {user?.shop?.imageUrl ? (
-            <img
-              src={user.shop.imageUrl}
-              alt="Shop Avatar"
-              className="lg:hidden w-11 h-11 rounded-full object-cover shadow-sm border border-gray-200"
-            />
-          ) : (
-            <ShoppingBag className="lg:hidden" />
-          )}
-
           {/* Search Bar */}
           <div className="relative flex-1">
             <Search
@@ -225,7 +197,7 @@ export default function DashboardPage() {
                 key={product.id}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => {
-                  setProductModalOpen(true);
+                  setProductStockModalOpen(true);
                   setSelectedProduct(product);
                 }}
               >
@@ -257,38 +229,10 @@ export default function DashboardPage() {
 
       {/* RIGHT COLUMN: Order Details */}
       <div className="w-full lg:w-[380px] flex flex-col gap-6">
-        {/* Desktop User Info Header (Hidden on Mobile) */}
-        <div className="hidden lg:flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
-              {user?.imageUrl ? (
-                <img
-                  src={user.imageUrl}
-                  alt="User"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User2 />
-              )}
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-gray-900 text-sm leading-tight">
-                {user?.fullName || "A.B.C.Perera"}
-              </span>
-              <span className="text-xs text-gray-500 font-medium">
-                {user?.role || "Employee"}
-              </span>
-            </div>
-          </div>
-          <button className="w-10 h-10 bg-[#e5edfa] rounded-full flex items-center justify-center text-sello-blue hover:bg-blue-100 transition-colors">
-            <History size={18} />
-          </button>
-        </div>
-
         {/* Order Details Panel */}
-        <div className="bg-[#f0f4fa] rounded-3xl p-4 lg:p-5 flex flex-col shadow-sm border border-blue-50/50 h-full">
+        <div className="bg-[#f0f4fa] h-full rounded-3xl p-4 lg:p-5 flex flex-col shadow-sm border border-blue-50/50">
           <h2 className="text-[17px] font-bold text-gray-900 mb-4">
-            Order Details
+            Stock Details
           </h2>
 
           {/* Cart Items List */}
@@ -318,17 +262,13 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1 min-w-[75px]">
-                  <button
-                    onClick={() => removeFromCart(item.id)}
-                    className="text-gray-400 hover:text-gray-700 transition-colors bg-white rounded-full p-0.5 border border-gray-200"
-                  >
+                  <button className="text-gray-400 hover:text-gray-700 transition-colors bg-white rounded-full p-0.5 border border-gray-200">
                     <X size={12} />
                   </button>
                   <span className="font-extrabold text-gray-900 text-[12px] mt-1">
                     Rs.{" "}
                     {(
-                      Number(item.quantity) *
-                      Number(item.product.unitPrice || 0)
+                      Number(item.quantity) * Number(item.unitCost || 0)
                     ).toFixed(2)}
                   </span>
                 </div>
@@ -364,7 +304,7 @@ export default function DashboardPage() {
                 {cartItems
                   .reduce(
                     (acc, item) =>
-                      acc + item.quantity * Number(item.product.unitPrice || 0),
+                      acc + item.quantity * Number(item.unitCost || 0),
                     0,
                   )
                   .toFixed(2)}
@@ -377,10 +317,11 @@ export default function DashboardPage() {
                 Cancel
               </button>
               <button
-                onClick={() => setPaymentModalOpen(true)}
+                onClick={() => setAddStockRecordModalOpen(true)}
+                disabled={cartItems.length === 0}
                 className="flex-1 bg-[#3770E6] text-white font-semibold py-3 rounded-full hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 text-[15px]"
               >
-                Place Order
+                Add Stock
               </button>
             </div>
           </div>
@@ -388,27 +329,27 @@ export default function DashboardPage() {
       </div>
 
       {/* Product Modal */}
-      {productModalOpen && selectedProduct && (
-        <ProductModal
+      {productStockModalOpen && selectedProduct && (
+        <ProductStockModal
           product={selectedProduct}
           onClose={() => {
-            setProductModalOpen(false);
+            setProductStockModalOpen(false);
             setSelectedProduct(null);
           }}
-          isOpen={productModalOpen}
+          isOpen={productStockModalOpen}
           onAdd={handleAddToCart}
         />
       )}
 
       {/* Payment Modal */}
-      {paymentModalOpen && (
-        <PaymentModal
+      {addStockRecordModalOpen && (
+        <AddStockRecordModal
           totalAmount={subtotal}
           onClose={() => {
-            setPaymentModalOpen(false);
+            setAddStockRecordModalOpen(false);
           }}
-          isOpen={paymentModalOpen}
-          onComplete={handleCompletePayment}
+          isOpen={addStockRecordModalOpen}
+          onComplete={handleAddStockRecord}
         />
       )}
     </div>

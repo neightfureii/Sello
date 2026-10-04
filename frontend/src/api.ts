@@ -1,10 +1,25 @@
 export type Role = 'admin' | 'manager' | 'cashier';
 
+export interface Shop {
+  id: string;
+  name: string;
+  location: string;
+  type: string;
+  imageUrl?: string;
+  imageCldPubId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface User {
   id: number;
   email: string;
   fullName: string;
   role: Role;
+  shopId: string;
+  shop: Shop;
+  imageUrl: string;
+  imageCldPubId: string;
 }
 
 export interface Category {
@@ -31,6 +46,36 @@ export interface CartItem {
   quantity: number;
   displayUnit: string;
   discount: number;
+}
+
+export interface StockCartItem {
+  id: string;
+  product: Product;
+  quantity: number;
+  displayUnit: string;
+  discount: number;
+  unitCost: number;
+}
+
+export interface StockRecord {
+  id: string;
+  shopId: string;
+  stockReference: string;
+  paymentSource: string;
+  dateAcquired: string;
+  status: string;
+  stockEntries: Stock[];
+}
+
+export interface Stock {
+  id: string;
+  stockRecordId: string;
+  productId: number;
+  shopId: string;
+  unitCost: number;
+  quantityReceived: number;
+  mfd?: string | null;
+  exp?: string | null;
 }
 
 export async function api<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {

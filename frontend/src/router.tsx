@@ -11,6 +11,7 @@ import AddCategoryPage from './pages/AddCategoryPage';
 import ProfilePage from './pages/ProfilePage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import AccountsPage from './pages/AccountsPage';
+import AddStockPage from './pages/AddStockPage';
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
           { path: 'products', element: <InventoryPage /> },
           { path: 'products/add-product', element: <AddProductPage /> },
           { path: 'products/add-category', element: <AddCategoryPage /> },
+          { path: 'products/add-stock', element: <AddStockPage /> },
           {
             element: <RequireRole roles={['admin']} />,
             children: [{ path: 'users', element: <UsersPage /> }],
