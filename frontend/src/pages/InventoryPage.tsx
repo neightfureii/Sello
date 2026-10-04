@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type Product, type Category } from "../api";
+import { api, type Product, type Category, type StockRecord } from "../api";
 import { useAuth } from "../auth/AuthContext";
-import { Search, Plus, LayoutGrid } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { Button } from "../components/Button";
 import { useNavigate } from "react-router-dom";
 
@@ -11,11 +11,20 @@ export default function InventoryPage() {
   const canEdit = user?.role === "admin" || user?.role === "manager";
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [stockRecords, setStockRecords] = useState<StockRecord[]>([]);
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
 
   const loadData = useCallback(() => {
+    api<{ stockRecords: StockRecord[] } | StockRecord[]>("/stock-records")
+      .then((d) => {
+        // Handles both { stockRecords: [...] } or direct [...] responses
+        const data = Array.isArray(d) ? d : d?.stockRecords;
+        setStockRecords(data || []);
+      })
+      .catch((err) => setError(err.message));
+
     // Fetch products
     api<{ products: Product[] } | Product[]>("/products")
       .then((d) => {
@@ -58,7 +67,7 @@ export default function InventoryPage() {
                 Stock Records
               </span>
               <div className="text-3xl font-extrabold text-gray-900 mt-2">
-                1,560
+                {stockRecords.length}
               </div>
               {/* <div className="text-xs text-gray-500 font-medium mt-1">
                 Latest Update: 21/07/2026
