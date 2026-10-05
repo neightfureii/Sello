@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { InputField } from "../components/InputField";
 import BackButton from "../components/BackButton";
+import { apiUrl } from "../api";
 
 export default function AddCategoryPage() {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ export default function AddCategoryPage() {
     }
 
     try {
-      const response = await fetch("/api/categories", {
+      const response = await fetch(apiUrl("/categories"), {
         method: "POST",
         body: formData, // Do NOT set 'Content-Type' header manually; browser handles it
         credentials: "include",

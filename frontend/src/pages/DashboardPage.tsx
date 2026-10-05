@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type Category, type Product, type CartItem } from "../api";
+import { api, apiUrl, type Category, type Product, type CartItem } from "../api";
 import { useAuth } from "../auth/AuthContext";
 import {
   Search,
@@ -124,7 +124,7 @@ export default function DashboardPage() {
     };
 
     try {
-      const response = await fetch("/api/sales", {
+      const response = await fetch(apiUrl("/sales"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

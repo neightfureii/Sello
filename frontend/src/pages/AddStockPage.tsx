@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type Category, type Product, type StockCartItem } from "../api";
+import { api, apiUrl, type Category, type Product, type StockCartItem } from "../api";
 import { useToast } from "../context/ToastContext";
 import { Search, History, X, LayoutGrid } from "lucide-react";
 import BackButton from "../components/BackButton";
@@ -113,7 +113,7 @@ export default function AddStockPage() {
     };
 
     try {
-      const response = await fetch("/api/stock-records", {
+      const response = await fetch(apiUrl("/stock-records"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -12,7 +12,7 @@ const ROLES = Object.values(Role);
 
 const cookieOpts = {
   httpOnly: true,
-  sameSite: "lax" as const,
+  sameSite: config.isProd ? ("none" as const) : ("lax" as const),
   secure: config.isProd,
   maxAge: 8 * 60 * 60 * 1000,
 };
@@ -110,7 +110,6 @@ router.post(
     }
     const passwordHash = await bcrypt.hash(password, 12);
 
-    console.log("dsdddddddddddddddddd", shopId);
     try {
       const user = await prisma.user.create({
         data: {

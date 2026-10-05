@@ -4,7 +4,7 @@ import { Button } from "../components/Button";
 import { InputField } from "../components/InputField";
 import BackButton from "../components/BackButton";
 import { useToast } from "../context/ToastContext";
-import { api, type Role, type Shop } from "../api";
+import { api, apiUrl, type Role, type Shop } from "../api";
 import { Image as ImageIcon } from "lucide-react";
 
 export default function AddUserPage() {
@@ -60,7 +60,7 @@ export default function AddUserPage() {
     }
 
     try {
-      const response = await fetch("/api/auth/users", {
+      const response = await fetch(apiUrl("/auth/users"), {
         method: "POST",
         body: formData,
         credentials: "include",

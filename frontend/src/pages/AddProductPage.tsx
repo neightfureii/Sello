@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "../components/Button";
 import { InputField } from "../components/InputField";
 import BackButton from "../components/BackButton";
-import { api, type Category } from "../api";
+import { api, apiUrl, type Category } from "../api";
 
 export default function AddProductPage() {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ export default function AddProductPage() {
     }
 
     try {
-      const response = await fetch("/api/products", {
+      const response = await fetch(apiUrl("/products"), {
         method: "POST",
         body: formData, 
         credentials: "include",

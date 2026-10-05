@@ -6,6 +6,7 @@ import BackButton from "../components/BackButton";
 import { useToast } from "../context/ToastContext";
 import { Image as ImageIcon } from "lucide-react";
 import { SHOP_TYPE_DETAILS, type ShopType } from "../constants";
+import { apiUrl } from "../api";
 
 export default function AddShopPage() {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ export default function AddShopPage() {
     }
 
     try {
-      const response = await fetch("/api/shops", {
+      const response = await fetch(apiUrl("/shops"), {
         method: "POST",
         body: formData,
         credentials: "include",

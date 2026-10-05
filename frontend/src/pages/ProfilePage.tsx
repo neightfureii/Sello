@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { User, Store, Camera, Save } from "lucide-react";
+import { apiUrl } from "../api";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -31,7 +32,7 @@ export default function ProfilePage() {
     }
 
     try {
-      const response = await fetch("/api/auth/profile", {
+      const response = await fetch(apiUrl("/auth/profile"), {
         method: "PATCH",
         body: formData,
         credentials: "include",

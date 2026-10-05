@@ -83,8 +83,22 @@ export interface Stock {
   exp?: string | null;
 }
 
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");
+const apiBaseUrl =
+  configuredApiUrl && import.meta.env.PROD
+    ? `${configuredApiUrl.replace(/\/api$/, "")}/api`
+    : "/api";
+
+export function apiUrl(path: string): string {
+  if (import.meta.env.PROD && !configuredApiUrl) {
+    throw new Error("VITE_API_URL must be set to the deployed backend URL.");
+  }
+
+  return `${apiBaseUrl}/${path.replace(/^\/+/, "")}`;
+}
+
 export async function api<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(apiUrl(path), {
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     ...options,
