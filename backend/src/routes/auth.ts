@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { prisma } from "../db/prisma.js";
 import { config } from "../config.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { Prisma, Role, type User } from "../generated/prisma/client.js";
+import { Prisma, Role, type User } from "@prisma/client";
 import { upload } from "../middleware/upload.js";
 
 const router = Router();
