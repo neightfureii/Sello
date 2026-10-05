@@ -32,7 +32,7 @@ export default function AddCategoryPage() {
 
       if (!response.ok) throw new Error("Upload failed");
 
-      navigate("/products");
+      navigate("/inventory/categories");
     } catch (err) {
       setError("Could not save category");
     }

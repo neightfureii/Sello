@@ -9,7 +9,6 @@
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "migrate": "npm run db:migrate -w backend",
-    "seed": "npm run seed -w backend",
     "dev": "concurrently -n api,web -c blue,green \"npm run dev -w backend\" \"npm run dev -w frontend\""
   },
   "devDependencies": {

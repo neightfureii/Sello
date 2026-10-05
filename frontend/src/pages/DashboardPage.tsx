@@ -1,17 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type Category, type Product, type CartItem } from "../api";
 import { useAuth } from "../auth/AuthContext";
-import { Search, History, X, ShoppingBag, User2 } from "lucide-react";
+import {
+  Search,
+  History,
+  X,
+  ShoppingBag,
+  User2,
+  LayoutGrid,
+} from "lucide-react";
 import ProductModal from "../components/ProductModal";
 import PaymentModal from "../components/PaymentModal";
 import { useToast } from "../context/ToastContext";
+import { useNavigate } from "react-router-dom";
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   const [error, setError] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeCategory, setActiveCategory] = useState<string>("All");
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,10 +57,17 @@ export default function DashboardPage() {
     const matchesSearch = p.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
+
     const matchesCategory =
-      activeCategory === "All" || (p as any).categoryId === activeCategory;
+      activeCategory === "All" || p.categoryId === activeCategory;
+
     return matchesSearch && matchesCategory;
   });
+
+  const activeCategoryName =
+    activeCategory === "All"
+      ? "All Products"
+      : categories.find((c) => c.id === activeCategory)?.name || "Products";
 
   const getNormalizedQuantity = (
     quantity: number,
@@ -95,10 +111,7 @@ export default function DashboardPage() {
     return acc + Math.max(0, itemTotal);
   }, 0);
 
-  const handleCompletePayment = async (
-    paymentMethod: string,
-    cashGiven: number,
-  ) => {
+  const handleCompletePayment = async (paymentMethod: string) => {
     setError("");
 
     // Map cart items into the shape expected by the backend
@@ -177,33 +190,54 @@ export default function DashboardPage() {
             <input
               type="text"
               placeholder="Search"
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#e5edfa] border border-transparent focus:bg-white focus:border-sello-blue focus:ring-1 focus:ring-sello-blue outline-none rounded-full py-3 pl-11 pr-4 text-sm transition-all text-gray-800 placeholder-gray-500 font-medium"
             />
           </div>
 
           {/* Mobile History Button */}
-          <button className="lg:hidden w-11 h-11 bg-[#e5edfa] rounded-full flex items-center justify-center text-sello-blue hover:bg-blue-100 transition-colors shrink-0">
+          <button
+            onClick={() => navigate("/sale-history")}
+            className="lg:hidden w-11 h-11 bg-[#e5edfa] rounded-full flex items-center justify-center text-sello-blue hover:bg-blue-100 transition-colors shrink-0"
+          >
             <History size={20} />
           </button>
         </div>
 
         {/* Categories */}
         <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
+          {/* "All" Button */}
+          <button
+            onClick={() => setActiveCategory("All")}
+            className={`flex flex-col items-center justify-center min-w-[72px] h-[76px] transition-all rounded-2xl p-1 pb-2 shadow-sm border ${
+              activeCategory === "All"
+                ? "border-blue-200 bg-blue-100 text-sello-blue"
+                : "border-gray-100 text-gray-700"
+            }`}
+          >
+            <LayoutGrid />
+            <span className="text-[12px] font-bold">All</span>
+          </button>
+
           {categories.map((cat) => (
             <button
-              key={cat.name}
-              onClick={() => setActiveCategory(cat.name)}
-              className={`flex flex-col items-center gap-1.5 min-w-[72px] transition-all bg-white rounded-2xl p-1 pb-2 shadow-sm border ${activeCategory === cat.name ? "border-blue-200 bg-blue-50" : "border-gray-100"}`}
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`flex flex-col items-center gap-1.5 min-w-[72px] transition-all rounded-2xl p-1 pb-2 shadow-sm border ${
+                activeCategory === cat.id
+                  ? "border-blue-200 bg-blue-100"
+                  : "border-gray-100"
+              }`}
             >
               <div className="w-16 h-12 rounded-xl overflow-hidden">
                 <img
                   src={cat.imageUrl}
                   alt={cat.name}
-                  className={`w-full h-full object-cover ${activeCategory === cat.name ? "opacity-80" : ""}`}
+                  className={`w-full h-full object-cover ${activeCategory === cat.id ? "opacity-80" : ""}`}
                 />
               </div>
               <span
-                className={`text-[12px] font-semibold ${activeCategory === cat.name ? "text-sello-blue" : "text-gray-700"}`}
+                className={`text-[12px] font-semibold ${activeCategory === cat.id ? "text-sello-blue" : "text-gray-700"}`}
               >
                 {cat.name}
               </span>
@@ -213,14 +247,15 @@ export default function DashboardPage() {
 
         {/* Product Grid */}
         <div className="flex flex-col gap-4 flex-1">
-          {/* Hide the category title on mobile to save space, show on desktop */}
           <h2 className="hidden lg:block text-lg font-bold text-gray-900">
-            {activeCategory}{" "}
-            <span className="text-gray-500 text-sm font-normal">(06)</span>
+            {activeCategoryName}{" "}
+            <span className="text-gray-500 text-sm font-normal">
+              ({filteredProducts.length.toString().padStart(2, "0")})
+            </span>
           </h2>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4 pb-4">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <button
                 key={product.id}
                 className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow cursor-pointer"
@@ -252,6 +287,14 @@ export default function DashboardPage() {
               </button>
             ))}
           </div>
+
+          {filteredProducts.length === 0 && (
+            <div className="text-center py-10 bg-white rounded-2xl border border-gray-100">
+              <p className="text-gray-500 text-sm">
+                No products found.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -280,7 +323,10 @@ export default function DashboardPage() {
               </span>
             </div>
           </div>
-          <button className="w-10 h-10 bg-[#e5edfa] rounded-full flex items-center justify-center text-sello-blue hover:bg-blue-100 transition-colors">
+          <button
+            onClick={() => navigate("/sale-history")}
+            className="w-10 h-10 bg-[#e5edfa] rounded-full flex items-center justify-center text-sello-blue hover:bg-blue-100 transition-colors hover:cursor-pointer"
+          >
             <History size={18} />
           </button>
         </div>
@@ -373,7 +419,10 @@ export default function DashboardPage() {
 
             {/* Action Buttons */}
             <div className="flex gap-3">
-              <button className="flex-1 border border-[#8daff2] bg-white text-sello-blue font-semibold py-3 rounded-full hover:bg-blue-50 transition-colors text-[15px]">
+              <button
+                onClick={() => setCartItems([])}
+                className="flex-1 border border-[#8daff2] bg-white text-sello-blue font-semibold py-3 rounded-full hover:bg-blue-50 transition-colors text-[15px]"
+              >
                 Cancel
               </button>
               <button

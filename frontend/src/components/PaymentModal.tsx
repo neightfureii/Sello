@@ -10,7 +10,7 @@ interface PaymentModalProps {
   isOpen: boolean;
   totalAmount: number;
   onClose: () => void;
-  onComplete: (paymentMethod: string, cashGiven: number) => void;
+  onComplete: (paymentMethod: string) => void;
 }
 
 export default function PaymentModal({
@@ -19,9 +19,7 @@ export default function PaymentModal({
   onClose,
   onComplete,
 }: PaymentModalProps) {
-  const [method, setMethod] = useState<PaymentMethodType>(
-    Payment_Method.cash
-  );
+  const [method, setMethod] = useState<PaymentMethodType>(Payment_Method.cash);
   const [cashGiven, setCashGiven] = useState("");
 
   if (!isOpen) return null;
@@ -29,8 +27,14 @@ export default function PaymentModal({
   const changeDue = Math.max(0, Number(cashGiven || 0) - totalAmount);
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl flex flex-col gap-5 relative animate-in fade-in zoom-in-95 duration-150">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl flex flex-col gap-5 relative animate-in fade-in zoom-in-95 duration-150"
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -121,7 +125,7 @@ export default function PaymentModal({
         <div className="flex gap-3 pt-1">
           <button
             onClick={() => {
-              onComplete(method, Number(cashGiven || totalAmount));
+              onComplete(method);
               onClose();
             }}
             className="flex-1 border border-[#8daff2] bg-white text-sello-blue font-semibold py-3.5 rounded-full hover:bg-blue-50 transition-colors text-sm"
@@ -130,7 +134,7 @@ export default function PaymentModal({
           </button>
           <button
             onClick={() => {
-              onComplete(method, Number(cashGiven || totalAmount));
+              onComplete(method);
               onClose();
             }}
             className="flex-1 bg-sello-blue text-white font-semibold py-3.5 rounded-full hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 text-sm"

@@ -11,6 +11,7 @@ import {
   User,
   Users,
   Settings,
+  ShoppingCart,
 } from "lucide-react";
 
 export default function Layout() {
@@ -132,7 +133,7 @@ export default function Layout() {
             <HomeIcon size={24} />
             <span>Home</span>
           </NavLink>
-          <NavLink to="/products" className={desktopNavStyle}>
+          <NavLink to="/inventory" className={desktopNavStyle}>
             <Archive size={24} />
             <span>Inventory</span>
           </NavLink>
@@ -145,10 +146,16 @@ export default function Layout() {
             <span>Accounts</span>
           </NavLink>
           {user?.role === "admin" && (
-            <NavLink to="/users" className={desktopNavStyle}>
-              <Users size={24} />
-              <span>Users</span>
-            </NavLink>
+            <>
+              <NavLink to="/users" className={desktopNavStyle}>
+                <Users size={24} />
+                <span>Users</span>
+              </NavLink>
+              <NavLink to="/shops" className={desktopNavStyle}>
+                <ShoppingCart size={24} />
+                <span>Shops</span>
+              </NavLink>
+            </>
           )}
         </nav>
 
@@ -191,7 +198,7 @@ export default function Layout() {
             </>
           )}
         </NavLink>
-        <NavLink to="/products" className={mobileNavStyle}>
+        <NavLink to="/inventory" className={mobileNavStyle}>
           {({ isActive }) => (
             <>
               <Archive size={20} />

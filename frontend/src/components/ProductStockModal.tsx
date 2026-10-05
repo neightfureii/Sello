@@ -6,7 +6,12 @@ interface ProductModalProps {
   product: Product;
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (quantity: number, unit: string, discount: number, unitCost: number) => void;
+  onAdd: (
+    quantity: number,
+    unit: string,
+    discount: number,
+    unitCost: number,
+  ) => void;
 }
 
 export default function ProductModal({
@@ -36,8 +41,14 @@ export default function ProductModal({
     normalizedQty(qty) * Number(unitCostDisplay || 0) - Number(discount || 0);
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl flex flex-col gap-5 relative animate-in fade-in zoom-in-95 duration-150">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl flex flex-col gap-5 relative animate-in fade-in zoom-in-95 duration-150"
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -140,7 +151,12 @@ export default function ProductModal({
           </button>
           <button
             onClick={() => {
-              onAdd(Number(qty || 0), selectedUnit, Number(discount || 0), Number(unitCostDisplay || 0));
+              onAdd(
+                Number(qty || 0),
+                selectedUnit,
+                Number(discount || 0),
+                Number(unitCostDisplay || 0),
+              );
               onClose();
             }}
             className="flex-1 bg-sello-blue text-white font-semibold py-3.5 rounded-full hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 text-sm"
