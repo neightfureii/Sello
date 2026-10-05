@@ -16,12 +16,6 @@ export default function ProductModal({ product, isOpen, onClose, onAdd }: Produc
 
   if (!isOpen) return null;
 
-  const handleQuickQty = (val: string) => {
-    // Strips out text like "500g" -> "0.5" or "1kg" -> "1" for calculation purposes
-    const numericVal = val.includes("g") ? (parseInt(val) / 1000).toString() : parseInt(val).toString();
-    setQty(numericVal);
-  };
-
   const normalizedQty = (qty: string) => {
     let normqty = Number(qty || 0);
     if (selectedUnit === "g" && product.unit === "kg") {
@@ -35,11 +29,19 @@ export default function ProductModal({ product, isOpen, onClose, onAdd }: Produc
   const calculatedTotal = (normalizedQty(qty) * Number(product.unitPrice || 0)) - Number(discount || 0);
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl flex flex-col gap-5 relative animate-in fade-in zoom-in-95 duration-150">
+    /* 1. Add onClick={onClose} to the background backdrop */
+    <div 
+      onClick={onClose}
+      className="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+    >
+      {/* 2. Add onClick={(e) => e.stopPropagation()} to prevent inner clicks from closing */}
+      <div 
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white rounded-3xl p-6 w-full max-w-md shadow-xl flex flex-col gap-5 relative animate-in fade-in zoom-in-95 duration-150"
+      >
         
         {/* Close Button */}
-        <button onClick={onClose} className="absolute right-5 top-5 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1 transition-colors">
+        <button onClick={onClose} className="absolute right-5 top-5 text-gray-400 hover:text-gray-700 bg-gray-100 rounded-full p-1 transition-colors cursor-pointer">
           <X size={16} />
         </button>
 
@@ -71,31 +73,18 @@ export default function ProductModal({ product, isOpen, onClose, onAdd }: Produc
             <div className="flex bg-[#f0f4fa] p-1 rounded-xl gap-1">
               <button 
                 onClick={() => setSelectedUnit("g")} 
-                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedUnit === "g" ? "bg-sello-blue text-white shadow-xs" : "text-gray-600 hover:text-gray-900"}`}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${selectedUnit === "g" ? "bg-sello-blue text-white shadow-xs" : "text-gray-600 hover:text-gray-900"}`}
               >
                 g
               </button>
               <button 
                 onClick={() => setSelectedUnit("kg")} 
-                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedUnit === "kg" ? "bg-sello-blue text-white shadow-xs" : "text-gray-600 hover:text-gray-900"}`}
+                className={`px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${selectedUnit === "kg" ? "bg-sello-blue text-white shadow-xs" : "text-gray-600 hover:text-gray-900"}`}
               >
                 kg
               </button>
             </div>
           </div>
-
-          {/* Quick Increment Buttons */}
-          {/* <div className="grid grid-cols-4 gap-2 mt-1">
-            {["500g", "1kg", "2kg", "5kg"].map((preset) => (
-              <button 
-                key={preset}
-                onClick={() => handleQuickQty(preset)}
-                className="border border-gray-200 hover:border-sello-blue text-gray-700 font-semibold py-2 rounded-xl text-xs transition-colors bg-white shadow-2xs"
-              >
-                {preset}
-              </button>
-            ))}
-          </div> */}
         </div>
 
         {/* Discount Section */}
@@ -120,7 +109,7 @@ export default function ProductModal({ product, isOpen, onClose, onAdd }: Produc
         <div className="flex gap-3 pt-1">
           <button 
             onClick={onClose}
-            className="flex-1 border border-[#8daff2] bg-white text-sello-blue font-semibold py-3.5 rounded-full hover:bg-blue-50 transition-colors text-sm"
+            className="flex-1 border border-[#8daff2] bg-white text-sello-blue font-semibold py-3.5 rounded-full hover:bg-blue-50 transition-colors text-sm cursor-pointer"
           >
             Cancel
           </button>
@@ -129,7 +118,7 @@ export default function ProductModal({ product, isOpen, onClose, onAdd }: Produc
               onAdd(Number(qty || 0), selectedUnit, Number(discount || 0));
               onClose();
             }}
-            className="flex-1 bg-sello-blue text-white font-semibold py-3.5 rounded-full hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 text-sm"
+            className="flex-1 bg-sello-blue text-white font-semibold py-3.5 rounded-full hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 text-sm cursor-pointer"
           >
             Add
           </button>

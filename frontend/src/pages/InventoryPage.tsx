@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type Product, type Category, type StockRecord } from "../api";
 import { useAuth } from "../auth/AuthContext";
-import { Search, Plus } from "lucide-react";
+import {
+  Search,
+  Plus,
+  LayoutGrid,
+  FileText,
+  Package,
+  Layers,
+  ArrowRight,
+} from "lucide-react";
 import { Button } from "../components/Button";
 import { useNavigate } from "react-router-dom";
 
@@ -19,13 +27,11 @@ export default function InventoryPage() {
   const loadData = useCallback(() => {
     api<{ stockRecords: StockRecord[] } | StockRecord[]>("/stock-records")
       .then((d) => {
-        // Handles both { stockRecords: [...] } or direct [...] responses
         const data = Array.isArray(d) ? d : d?.stockRecords;
         setStockRecords(data || []);
       })
       .catch((err) => setError(err.message));
 
-    // Fetch products
     api<{ products: Product[] } | Product[]>("/products")
       .then((d) => {
         const data = Array.isArray(d) ? d : d?.products;
@@ -33,10 +39,8 @@ export default function InventoryPage() {
       })
       .catch((err) => setError(err.message));
 
-    // Fetch categories from your backend API
     api<{ categories: Category[] } | Category[]>("/categories")
       .then((d) => {
-        // Handles both { categories: [...] } or direct [...] responses
         const data = Array.isArray(d) ? d : d?.categories;
         setCategories(data || []);
       })
@@ -45,15 +49,21 @@ export default function InventoryPage() {
 
   useEffect(loadData, [loadData]);
 
-  // Filter products based on search query
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
+
     const matchesCategory =
-      activeCategory === "All" || (p as any).categoryId === activeCategory;
+      activeCategory === "All" || p.categoryId === activeCategory;
+
     return matchesSearch && matchesCategory;
   });
+
+  const activeCategoryName =
+    activeCategory === "All"
+      ? "All Products"
+      : categories.find((c) => c.id === activeCategory)?.name || "Products";
 
   return (
     <div className="flex flex-col gap-8 pb-10">
@@ -61,77 +71,99 @@ export default function InventoryPage() {
       {canEdit && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Stock Records Card */}
-          <div className="bg-[#f0f4fa] rounded-3xl p-4 flex flex-col justify-between border border-blue-100/60 shadow-sm">
-            <div>
-              <span className="text-sm font-bold text-gray-500">
-                Stock Records
-              </span>
-              <div className="text-3xl font-extrabold text-gray-900 mt-2">
-                {stockRecords.length}
+          <div
+            onClick={() => navigate("/inventory/stocks")}
+            className="group bg-gradient-to-br from-blue-50/50 to-[#f0f4fa] rounded-3xl p-6 flex flex-col justify-between border border-blue-100 shadow-sm hover:shadow-md hover:border-sello-blue transition-all cursor-pointer relative overflow-hidden"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Stock Records
+                </span>
+                <div className="text-4xl font-extrabold text-gray-900 mt-2">
+                  {stockRecords.length}
+                </div>
               </div>
-              {/* <div className="text-xs text-gray-500 font-medium mt-1">
-                Latest Update: 21/07/2026
-              </div> */}
+              <span className="text-xs font-semibold text-sello-blue flex items-center gap-1 group-hover:underline">
+                View all records <ArrowRight size={14} />
+              </span>
             </div>
-            <Button
-              className="mt-6 flex items-center justify-center gap-2 text-sm"
-              onClick={() => navigate("/products/add-stock")}
-            >
-              <Plus size={18} /> Add Stock
-            </Button>
+
+            <div className="mt-6 flex items-center justify-between pt-4 border-t border-blue-100/80">
+              <Button
+                className="text-xs py-2 px-4 shadow-none flex items-center gap-1.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/inventory/stocks/add-stock");
+                }}
+              >
+                <Plus size={16} /> Add Stock
+              </Button>
+            </div>
           </div>
 
           {/* Products Card */}
-          <div className="bg-[#f0f4fa] rounded-3xl p-4 flex flex-col justify-between border border-blue-100/60 shadow-sm">
-            <div>
-              <span className="text-sm font-bold text-gray-500">Products</span>
-              <div className="text-3xl font-extrabold text-gray-900 mt-2">
-                {products.length || 0}
+          <div
+            onClick={() => navigate("/inventory/products")}
+            className="group bg-gradient-to-br from-indigo-50/40 to-[#f0f4fa] rounded-3xl p-6 flex flex-col justify-between border border-indigo-100/80 shadow-sm hover:shadow-md hover:border-sello-blue transition-all cursor-pointer relative overflow-hidden"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Products
+                </span>
+                <div className="text-4xl font-extrabold text-gray-900 mt-2">
+                  {products.length || 0}
+                </div>
               </div>
-              {/* <div className="flex flex-col gap-0.5 mt-1 text-xs text-gray-500 font-medium">
-                <span>
-                  Active Products:{" "}
-                  <strong className="text-gray-800">230</strong>
-                </span>
-                <span>
-                  Low Stock Products:{" "}
-                  <strong className="text-red-600">15</strong>
-                </span>
-              </div> */}
+              <span className="text-xs font-semibold text-sello-blue flex items-center gap-1 group-hover:underline">
+                Manage inventory <ArrowRight size={14} />
+              </span>
             </div>
-            <Button
-              className="mt-6 flex items-center justify-center gap-2 text-sm"
-              onClick={() => navigate("/products/add-product")}
-            >
-              <Plus size={18} /> Add New Product
-            </Button>
+
+            <div className="mt-6 flex items-center justify-between pt-4 border-t border-indigo-100/60">
+              <Button
+                className="text-xs py-2 px-4 shadow-none flex items-center gap-1.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/inventory/products/add-product");
+                }}
+              >
+                <Plus size={16} /> Add Product
+              </Button>
+            </div>
           </div>
 
           {/* Product Categories Card */}
-          <div className="bg-[#f0f4fa] rounded-3xl p-4 flex flex-col justify-between border border-blue-100/60 shadow-sm">
-            <div>
-              <span className="text-sm font-bold text-gray-500">
-                Product Categories
-              </span>
-              <div className="text-3xl font-extrabold text-gray-900 mt-2">
-                {categories.length || 0}
+          <div
+            onClick={() => navigate("/inventory/categories")}
+            className="group bg-gradient-to-br from-sky-50/40 to-[#f0f4fa] rounded-3xl p-6 flex flex-col justify-between border border-sky-100/80 shadow-sm hover:shadow-md hover:border-sello-blue transition-all cursor-pointer relative overflow-hidden"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Product Categories
+                </span>
+                <div className="text-4xl font-extrabold text-gray-900 mt-2">
+                  {categories.length || 0}
+                </div>
               </div>
-              {/* <div className="flex flex-col gap-0.5 mt-1 text-xs text-gray-500 font-medium">
-                <span>
-                  Active Categories:{" "}
-                  <strong className="text-gray-800">16</strong>
-                </span>
-                <span>
-                  Empty Categories: <strong className="text-gray-800">2</strong>
-                </span>
-              </div> */}
+              <span className="text-xs font-semibold text-sello-blue flex items-center gap-1 group-hover:underline">
+                View categories <ArrowRight size={14} />
+              </span>
             </div>
-            <Button
-              className="mt-6 flex items-center justify-center gap-2 text-sm"
-              onClick={() => navigate("/products/add-category")}
-            >
-              <Plus size={18} /> Add New Category
-            </Button>
+
+            <div className="mt-6 flex items-center justify-between pt-4 border-t border-sky-100/60">
+              <Button
+                className="text-xs py-2 px-4 shadow-none flex items-center gap-1.5"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate("/inventory/categories/add-category");
+                }}
+              >
+                <Plus size={16} /> Add Category
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -145,7 +177,7 @@ export default function InventoryPage() {
           />
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#e5edfa] border border-transparent focus:bg-white focus:border-sello-blue focus:ring-1 focus:ring-sello-blue outline-none rounded-full py-3.5 pl-12 pr-4 text-sm transition-all text-gray-800 placeholder-gray-500 font-medium shadow-sm"
@@ -159,25 +191,37 @@ export default function InventoryPage() {
           Product Category
         </h2>
         <div className="flex items-center gap-4 overflow-x-auto pb-2 scrollbar-hide">
+          <button
+            onClick={() => setActiveCategory("All")}
+            className={`flex flex-col items-center justify-center min-w-[72px] h-[76px] transition-all rounded-2xl p-1 pb-2 shadow-sm border cursor-pointer ${
+              activeCategory === "All"
+                ? "border-blue-200 bg-blue-100 text-sello-blue"
+                : "border-gray-100 text-gray-700 bg-white hover:bg-gray-50"
+            }`}
+          >
+            <LayoutGrid />
+            <span className="text-[12px] font-bold">All</span>
+          </button>
+
           {categories.map((cat) => (
             <button
-              key={cat.name}
-              onClick={() => setActiveCategory(cat.name)}
-              className="flex flex-col items-center gap-2 min-w-[72px] transition-all"
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`flex flex-col items-center gap-1.5 min-w-[72px] transition-all rounded-2xl p-1 pb-2 shadow-sm border cursor-pointer ${
+                activeCategory === cat.id
+                  ? "border-blue-200 bg-blue-100"
+                  : "border-gray-100 bg-white hover:bg-gray-50"
+              }`}
             >
-              <div
-                className={`w-16 h-16 rounded-2xl flex items-center justify-center overflow-hidden border-2 transition-all ${activeCategory === cat.name ? "bg-blue-100 border-blue-200 shadow-sm" : "bg-white border-gray-100 hover:border-gray-200 shadow-sm"}`}
-              >
-                {cat.imageUrl && (
-                  <img
-                    src={cat.imageUrl}
-                    alt={cat.name}
-                    className="w-full h-full object-cover p-1 rounded-[14px]"
-                  />
-                )}
+              <div className="w-16 h-12 rounded-xl overflow-hidden">
+                <img
+                  src={cat.imageUrl}
+                  alt={cat.name}
+                  className={`w-full h-full object-cover ${activeCategory === cat.id ? "opacity-80" : ""}`}
+                />
               </div>
               <span
-                className={`text-[13px] font-semibold ${activeCategory === cat.name ? "text-sello-blue" : "text-gray-700"}`}
+                className={`text-[12px] font-semibold ${activeCategory === cat.id ? "text-sello-blue" : "text-gray-700"}`}
               >
                 {cat.name}
               </span>
@@ -188,10 +232,10 @@ export default function InventoryPage() {
 
       {/* --- PRODUCT GRID SECTION --- */}
       <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-bold text-gray-900">
-          {activeCategory}{" "}
+        <h2 className="hidden lg:block text-lg font-bold text-gray-900">
+          {activeCategoryName}{" "}
           <span className="text-gray-500 text-sm font-normal">
-            ({filteredProducts.length || "10"})
+            ({filteredProducts.length.toString().padStart(2, "0")})
           </span>
         </h2>
 
@@ -225,16 +269,6 @@ export default function InventoryPage() {
                     /Kg
                   </span>
                 </div>
-                <div className="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between text-[11px]">
-                  <span className="text-gray-500 font-medium">
-                    Available Qty:
-                  </span>
-                  {/* <span
-                    className={`font-bold ${p.stockQty <= p.reorderLevel ? "text-red-600" : "text-gray-800"}`}
-                  >
-                    {p.stockQty}kg
-                  </span> */}
-                </div>
               </div>
             </div>
           ))}
@@ -242,9 +276,7 @@ export default function InventoryPage() {
 
         {filteredProducts.length === 0 && (
           <div className="text-center py-10 bg-white rounded-2xl border border-gray-100">
-            <p className="text-gray-500 text-sm">
-              No products found matching your search.
-            </p>
+            <p className="text-gray-500 text-sm">No products found.</p>
           </div>
         )}
       </div>

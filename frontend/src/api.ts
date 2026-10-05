@@ -27,6 +27,9 @@ export interface Category {
   name: string;
   description: string;
   imageUrl?: string;
+  shopId: string;
+  shop: Shop;
+  noOfProducts?: number;
 }
 
 export interface Product {
@@ -38,6 +41,8 @@ export interface Product {
   imageUrl?: string;
   categoryId: string;
   category?: Category;
+  shopId: string;
+  shop: Shop;
 }
 
 export interface CartItem {

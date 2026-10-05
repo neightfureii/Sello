@@ -40,7 +40,7 @@ export default function AddProductPage() {
 
       if (!response.ok) throw new Error("Upload failed");
 
-      navigate("/products");
+      navigate("/inventory/products");
     } catch (err) {
       setError("Could not save product");
     }
