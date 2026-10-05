@@ -4,9 +4,8 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 import { upload } from "../middleware/upload.js";
 
 const router = Router();
-router.use(requireAuth);
 
-router.get("/", async (_req, res) => {
+router.get("/", requireAuth, async (_req, res) => {
   const shops = await prisma.shop.findMany({
     orderBy: { name: "asc" },
   });
@@ -15,8 +14,9 @@ router.get("/", async (_req, res) => {
 
 router.post(
   "/",
-  upload.single("image"),
+  requireAuth,
   requireRole("admin"),
+  upload.single("image"),
   async (req, res) => {
     const imageUrl = req.file?.path || null;
     const imageCldPubId = req.file?.filename || null;
@@ -28,12 +28,13 @@ router.post(
           name,
           location,
           type,
-          imageUrl, // Storing the URL string
-          imageCldPubId, // Storing the Cloudinary Public ID for future deletions/updates
+          imageUrl,
+          imageCldPubId,
         },
       });
       res.status(201).json({ newShop });
     } catch (err) {
+      console.error(err);
       res.status(500).json({ error: "Failed to create new shop" });
     }
   },
