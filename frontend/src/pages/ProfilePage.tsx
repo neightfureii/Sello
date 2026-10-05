@@ -1,8 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { User, Store, Mail, Shield, Camera, Save } from "lucide-react";
-import { api } from "../api";
+import { User, Store, Camera, Save } from "lucide-react";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -40,7 +39,6 @@ export default function ProfilePage() {
 
       if (!response.ok) throw new Error("Failed to update profile");
 
-      const data = await response.json();
       showToast("Profile successfully updated!", "success");
       
       // Optional: reload to sync AuthContext state with updated user info

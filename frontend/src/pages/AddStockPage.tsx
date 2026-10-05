@@ -1,15 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type Category, type Product, type StockCartItem } from "../api";
-import { useAuth } from "../auth/AuthContext";
+import { useToast } from "../context/ToastContext";
 import { Search, History, X, LayoutGrid } from "lucide-react";
 import BackButton from "../components/BackButton";
 import ProductStockModal from "../components/ProductStockModal";
 import AddStockRecordModal from "../components/AddStockRecordModal";
 
 export default function AddStockPage() {
-  const { user } = useAuth();
-
-  const [error, setError] = useState("");
+  const { showToast } = useToast();
   const [activeCategory, setActiveCategory] = useState("All");
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -28,7 +26,7 @@ export default function AddStockPage() {
         const data = Array.isArray(d) ? d : d?.products;
         setProducts(data || []);
       })
-      .catch((err) => setError(err.message));
+      .catch((err) => showToast(err.message || "Failed to load products", "error"));
 
     // Fetch categories from your backend API
     api<{ categories: Category[] } | Category[]>("/categories")
@@ -37,8 +35,8 @@ export default function AddStockPage() {
         const data = Array.isArray(d) ? d : d?.categories;
         setCategories(data || []);
       })
-      .catch((err) => setError(err.message));
-  }, []);
+      .catch((err) => showToast(err.message || "Failed to load categories", "error"));
+  }, [showToast]);
 
   useEffect(loadData, [loadData]);
 
@@ -104,8 +102,6 @@ export default function AddStockPage() {
   }, 0);
 
   const handleAddStockRecord = async (paymentMethod: string) => {
-    setError("");
-
     // Map cart items into the shape expected by the backend
     const payload = {
       paymentSource: paymentMethod,
@@ -132,7 +128,7 @@ export default function AddStockPage() {
       setCartItems([]);
       setAddStockRecordModalOpen(false);
     } catch (err: any) {
-      setError(err.message || "Could not complete restock operation");
+      showToast(err.message || "Could not complete restock operation", "error");
     }
   };
 

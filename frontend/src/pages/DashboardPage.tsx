@@ -19,7 +19,6 @@ export default function DashboardPage() {
   const { showToast } = useToast();
   const navigate = useNavigate();
 
-  const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -38,7 +37,7 @@ export default function DashboardPage() {
         const data = Array.isArray(d) ? d : d?.products;
         setProducts(data || []);
       })
-      .catch((err) => setError(err.message));
+      .catch((err) => showToast(err.message || "Failed to load products", "error"));
 
     // Fetch categories from your backend API
     api<{ categories: Category[] } | Category[]>("/categories")
@@ -47,8 +46,8 @@ export default function DashboardPage() {
         const data = Array.isArray(d) ? d : d?.categories;
         setCategories(data || []);
       })
-      .catch((err) => setError(err.message));
-  }, []);
+      .catch((err) => showToast(err.message || "Failed to load categories", "error"));
+  }, [showToast]);
 
   useEffect(loadData, [loadData]);
 
@@ -112,8 +111,6 @@ export default function DashboardPage() {
   }, 0);
 
   const handleCompletePayment = async (paymentMethod: string) => {
-    setError("");
-
     // Map cart items into the shape expected by the backend
     const payload = {
       paymentMethod: paymentMethod,
@@ -143,7 +140,6 @@ export default function DashboardPage() {
       setCartItems([]);
       setPaymentModalOpen(false);
     } catch (err: any) {
-      setError(err.message || "Could not complete order");
       showToast(err.message || "Could not complete order", "error");
     }
   };

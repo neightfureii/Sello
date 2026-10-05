@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type Shop, type User } from "../api";
+import { api, type Shop } from "../api";
 import { useToast } from "../context/ToastContext";
 import { UserPlus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";

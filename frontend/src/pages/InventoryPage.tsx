@@ -5,9 +5,6 @@ import {
   Search,
   Plus,
   LayoutGrid,
-  FileText,
-  Package,
-  Layers,
   ArrowRight,
 } from "lucide-react";
 import { Button } from "../components/Button";

@@ -10,7 +10,6 @@ interface PaymentModalProps {
 
 export default function AddStockRecordModal({
   isOpen,
-  totalAmount,
   onClose,
   onComplete,
 }: PaymentModalProps) {

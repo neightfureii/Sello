@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type Shop, type User } from "../api";
+import { api, type User } from "../api";
 import { useToast } from "../context/ToastContext";
 import { UserPlus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -8,9 +8,8 @@ export default function UsersPage() {
   const { showToast } = useToast();
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
-  const [shops, setShops] = useState<Shop[]>([]);
 
-  // Load users and shops
+  // Load users
   const loadData = useCallback(() => {
     // Fetch users list
     api<{ users: User[] } | User[]>("/auth/users")
@@ -20,13 +19,6 @@ export default function UsersPage() {
       })
       .catch((err) => showToast(err.message || "Failed to load users", "error"));
 
-    // Fetch shops list for dropdown selection
-    api<{ shops: Shop[] } | Shop[]>("/shops")
-      .then((d) => {
-        const data = Array.isArray(d) ? d : d?.shops;
-        setShops(data || []);
-      })
-      .catch((err) => showToast(err.message || "Failed to load shops", "error"));
   }, [showToast]);
 
   useEffect(loadData, [loadData]);
