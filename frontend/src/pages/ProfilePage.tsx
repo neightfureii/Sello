@@ -31,7 +31,7 @@ export default function ProfilePage() {
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/auth/profile", {
+      const response = await fetch("/api/auth/profile", {
         method: "PATCH",
         body: formData,
         credentials: "include",

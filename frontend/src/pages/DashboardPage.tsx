@@ -124,7 +124,7 @@ export default function DashboardPage() {
     };
 
     try {
-      const response = await fetch("http://localhost:4000/api/sales", {
+      const response = await fetch("/api/sales", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

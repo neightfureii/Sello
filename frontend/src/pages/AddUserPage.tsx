@@ -60,7 +60,7 @@ export default function AddUserPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/auth/users", {
+      const response = await fetch("/api/auth/users", {
         method: "POST",
         body: formData,
         credentials: "include",

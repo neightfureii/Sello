@@ -113,7 +113,7 @@ export default function AddStockPage() {
     };
 
     try {
-      const response = await fetch("http://localhost:4000/api/stock-records", {
+      const response = await fetch("/api/stock-records", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

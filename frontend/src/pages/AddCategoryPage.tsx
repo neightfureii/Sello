@@ -24,7 +24,7 @@ export default function AddCategoryPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/categories", {
+      const response = await fetch("/api/categories", {
         method: "POST",
         body: formData, // Do NOT set 'Content-Type' header manually; browser handles it
         credentials: "include",

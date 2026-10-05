@@ -44,7 +44,7 @@ export default function AddShopPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/shops", {
+      const response = await fetch("/api/shops", {
         method: "POST",
         body: formData,
         credentials: "include",

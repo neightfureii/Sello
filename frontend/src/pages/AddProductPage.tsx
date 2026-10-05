@@ -32,7 +32,7 @@ export default function AddProductPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:4000/api/products", {
+      const response = await fetch("/api/products", {
         method: "POST",
         body: formData, 
         credentials: "include",
