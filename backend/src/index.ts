@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.js";
 import productRoutes from "./routes/products.js";
 import categoryRoutes from "./routes/categories.js";
 import stockRecordRoutes from "./routes/stockRecords.js";
+import stockRoutes from "./routes/stocks.js";
 import saleRoutes from "./routes/sales.js";
 import shopRoutes from "./routes/shops.js";
 
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/stock-records", stockRecordRoutes);
+app.use("/api/stocks", stockRoutes);
 app.use("/api/sales", saleRoutes);
 app.use("/api/shops", shopRoutes);
 

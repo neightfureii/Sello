@@ -138,4 +138,42 @@ router.post(
   },
 );
 
+router.get("/users", requireAuth, async (_req, res) => {
+  const users = await prisma.user.findMany({
+    orderBy: { fullName: "asc" },
+    include: { shop: true },
+  });
+  res.json({ users });
+});
+
+// Update logged-in user's profile (name & image)
+router.patch(
+  "/profile",
+  requireAuth,
+  upload.single("image"),
+  async (req, res) => {
+    const userId = req.user!.sub;
+    const imageUrl = req.file?.path || undefined;
+    const imageCldPubId = req.file?.filename || undefined;
+    const { fullName } = req.body ?? {};
+
+    try {
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          ...(fullName && { fullName }),
+          ...(imageUrl && { imageUrl }),
+          ...(imageCldPubId && { imageCldPubId }),
+        },
+        include: { shop: true },
+      });
+
+      res.json({ user: publicUser(updatedUser) });
+    } catch (err) {
+      console.error("Profile update error:", err);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  },
+);
+
 export default router;
