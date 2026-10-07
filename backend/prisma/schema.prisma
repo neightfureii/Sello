@@ -82,6 +82,7 @@ model User {
 
   // Relations
   sales    Sale[]
+  stockRecords    StockRecord[]
   expenses Expense[]
   shop     Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
 
@@ -151,16 +152,19 @@ model Product {
 
 model StockRecord {
   id             String        @id @default(uuid()) @db.Uuid
+  userId         String        @map("user_id") @db.Uuid
   shopId         String        @map("shop_id") @db.Uuid
   stockReference String        @map("stock_reference") @db.VarChar(50)
   paymentSource  PaymentSource @default(shop_cash) @map("payment_source")
   dateAcquired   DateTime      @default(now()) @map("date_acquired")
   status         SaleStatus    @default(completed)
+  totalAmount    Decimal       @default(0.00) @map("total_amount") @db.Decimal(10, 2)
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at")
 
   // Relations
-  shop   Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
   stocks Stock[]
 
   @@map("stock_records")

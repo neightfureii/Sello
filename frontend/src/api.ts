@@ -65,22 +65,55 @@ export interface StockCartItem {
 export interface StockRecord {
   id: string;
   shopId: string;
+  userId: string;
+  user: User;
   stockReference: string;
   paymentSource: string;
   dateAcquired: string;
   status: string;
-  stockEntries: Stock[];
+  stocks: Stock[];
+  totalAmount: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Stock {
   id: string;
   stockRecordId: string;
   productId: number;
+  product: Product;
   shopId: string;
   unitCost: number;
   quantityReceived: number;
   mfd?: string | null;
   exp?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaleRecord {
+  id: string;
+  shopId: string;
+  billNo: string;
+  totalAmount: number;
+  discount: number;
+  paymentMethod: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  saleItems: SaleItem[];
+}
+
+export interface SaleItem {
+  id: string;
+  saleId: string;
+  saleRecord: SaleRecord;
+  stockId: string;
+  stock: Stock;
+  quantity: number;
+  unitPriceSold: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const configuredApiUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");

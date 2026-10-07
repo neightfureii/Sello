@@ -166,9 +166,17 @@ export default function Layout() {
           <div className="relative w-full flex flex-col items-center">
             <button
               onClick={() => setIsDesktopMenuOpen(!isDesktopMenuOpen)}
-              className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-white shadow-sm focus:outline-none focus:ring-2 focus:ring-sello-blue transition-all"
+              className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-white shadow-sm focus:outline-none focus:ring-2 focus:ring-sello-blue transition-all hover:cursor-pointer"
             >
-              <User size={20} className="text-gray-500" />
+              {user?.imageUrl ? (
+                <img
+                src={user.imageUrl}
+                alt="User"
+                className="w-full h-full object-cover"
+                />
+              ) : (
+                <User size={20} className="text-gray-500" />
+              )}
             </button>
 
             {/* 3. Apply absolute, left-full, and bottom-0 directly to the component */}

@@ -8,39 +8,49 @@ router.use(requireAuth);
 
 router.get("/", async (req, res) => {
   const shopId = (req as any).user?.shopId;
-  
+
   const products = await prisma.product.findMany({
     orderBy: { name: "asc" },
     where: { shopId: shopId },
-    include: { 
-      category: true, 
+    include: {
+      category: true,
       shop: true,
       stocks: {
         include: {
-          saleItems: true, // Includes sales linked to each stock batch for FIFO calculation
-        }
-      }
+          saleItems: {
+            include: {
+              sale: true,
+            },
+          },
+          stockRecord: true, // Includes stock record to check status
+        },
+      },
     },
   });
 
-  // Calculate available quantity dynamically for each product
+  // Calculate available quantity dynamically, ignoring reverted stock records and reverted sales
   const productsWithStock = products.map((product) => {
-    const totalReceived = product.stocks.reduce(
-      (sum, stock) => sum + Number(stock.quantityReceived), 
-      0
-    );
+    const totalReceived = product.stocks.reduce((sum, stock) => {
+      // Ignore stock batches coming from reverted stock records
+      if (stock.stockRecord?.status === "reverted") {
+        return sum;
+      }
+      return sum + Number(stock.quantityReceived);
+    }, 0);
 
     const totalSold = product.stocks.reduce((sum, stock) => {
-      const soldInBatch = stock.saleItems.reduce(
-        (itemSum, item) => itemSum + Number(item.quantity), 
-        0
-      );
+      const soldInBatch = stock.saleItems.reduce((itemSum, item) => {
+        // Ignore items belonging to reverted sales
+        if (item.sale?.status === "reverted") {
+          return itemSum;
+        }
+        return itemSum + Number(item.quantity);
+      }, 0);
       return sum + soldInBatch;
     }, 0);
 
     const availableQty = Math.max(0, totalReceived - totalSold);
 
-    // Remove raw stock relation array from response payload if unneeded, keeping availableQty
     const { stocks, ...productData } = product;
     return {
       ...productData,
@@ -58,11 +68,14 @@ router.post(
   async (req, res) => {
     const imageUrl = req.file?.path || null;
     const imageCldPubId = req.file?.filename || null;
-    const { name, unitPrice, unit, minStockAllowed, categoryId } = req.body ?? {};
+    const { name, unitPrice, unit, minStockAllowed, categoryId } =
+      req.body ?? {};
     const shopId = (req as any).user?.shopId;
 
     if (!shopId) {
-      return res.status(400).json({ error: "User is not associated with any shop" });
+      return res
+        .status(400)
+        .json({ error: "User is not associated with any shop" });
     }
 
     try {
