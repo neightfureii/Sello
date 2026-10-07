@@ -25,7 +25,7 @@ router.get("/", async (_req, res) => {
 router.post("/", requireRole("admin", "manager"), async (req, res) => {
   const userId = req.user!.sub;
   const shopId = req.user?.shopId;
-  const { paymentSource, items } = req.body ?? {};
+  const { paymentSource, items, totalAmount } = req.body ?? {};
 
   if (!shopId) {
     return res
@@ -51,6 +51,7 @@ router.post("/", requireRole("admin", "manager"), async (req, res) => {
           paymentSource,
           status: "completed",
           userId,
+          totalAmount,
         },
       });
 
