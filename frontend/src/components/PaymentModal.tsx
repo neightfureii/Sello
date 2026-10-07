@@ -57,7 +57,7 @@ export default function PaymentModal({
               <button
                 key={m.value}
                 onClick={() => setMethod(m.value)}
-                className={`py-2.5 rounded-xl text-xs font-bold transition-all shadow-2xs ${method === m.value ? "bg-sello-blue text-white shadow-xs" : "text-gray-600 hover:text-gray-900 bg-white"}`}
+                className={`py-2.5 rounded-xl text-xs font-bold transition-all shadow-2xs hover:cursor-pointer ${method === m.value ? "bg-sello-blue text-white shadow-xs" : "text-gray-600 hover:text-gray-900 bg-white"}`}
               >
                 {m.label}
               </button>
@@ -128,7 +128,7 @@ export default function PaymentModal({
               onComplete(method);
               onClose();
             }}
-            className="flex-1 border border-[#8daff2] bg-white text-sello-blue font-semibold py-3.5 rounded-full hover:bg-blue-50 transition-colors text-sm"
+            className="flex-1 border border-[#8daff2] bg-white hover:cursor-pointer text-sello-blue font-semibold py-3.5 rounded-full hover:bg-blue-50 transition-colors text-sm"
           >
             Print Bill
           </button>
@@ -137,7 +137,7 @@ export default function PaymentModal({
               onComplete(method);
               onClose();
             }}
-            className="flex-1 bg-sello-blue text-white font-semibold py-3.5 rounded-full hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 text-sm"
+            className="flex-1 bg-sello-blue text-white hover:cursor-pointer font-semibold py-3.5 rounded-full hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 text-sm"
           >
             Skip Bill
           </button>

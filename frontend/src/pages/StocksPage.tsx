@@ -57,7 +57,7 @@ export default function StocksPage() {
           />
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search by Ref No"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#e5edfa] border border-transparent focus:bg-white focus:border-sello-blue outline-none rounded-full py-3 pl-11 pr-4 text-sm text-gray-800 placeholder-gray-500 font-medium transition-all"

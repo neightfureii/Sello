@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, apiUrl, type Category, type Product, type StockCartItem } from "../api";
+import {
+  api,
+  apiUrl,
+  type Category,
+  type Product,
+  type StockCartItem,
+} from "../api";
 import { useToast } from "../context/ToastContext";
 import { Search, History, X, LayoutGrid } from "lucide-react";
 import BackButton from "../components/BackButton";
@@ -26,7 +32,9 @@ export default function AddStockPage() {
         const data = Array.isArray(d) ? d : d?.products;
         setProducts(data || []);
       })
-      .catch((err) => showToast(err.message || "Failed to load products", "error"));
+      .catch((err) =>
+        showToast(err.message || "Failed to load products", "error"),
+      );
 
     // Fetch categories from your backend API
     api<{ categories: Category[] } | Category[]>("/categories")
@@ -35,7 +43,9 @@ export default function AddStockPage() {
         const data = Array.isArray(d) ? d : d?.categories;
         setCategories(data || []);
       })
-      .catch((err) => showToast(err.message || "Failed to load categories", "error"));
+      .catch((err) =>
+        showToast(err.message || "Failed to load categories", "error"),
+      );
   }, [showToast]);
 
   useEffect(loadData, [loadData]);
@@ -97,7 +107,7 @@ export default function AddStockPage() {
 
   const subtotal = cartItems.reduce((acc, item) => {
     const itemTotal =
-      item.quantity * Number(item.product.unitPrice || 0) - item.discount;
+      item.quantity * Number(item.unitCost || 0) - item.discount;
     return acc + Math.max(0, itemTotal);
   }, 0);
 
@@ -110,6 +120,7 @@ export default function AddStockPage() {
         quantity: item.quantity,
         unitCost: item.unitCost,
       })),
+      totalAmount: subtotal,
     };
 
     try {
@@ -329,14 +340,7 @@ export default function AddStockPage() {
               </span>
               {/* Dynamic total calculation based on mock data */}
               <span className="text-gray-900 font-extrabold text-[16px]">
-                Rs.
-                {cartItems
-                  .reduce(
-                    (acc, item) =>
-                      acc + item.quantity * Number(item.unitCost || 0),
-                    0,
-                  )
-                  .toFixed(2)}
+                Rs.{subtotal.toFixed(2)}
               </span>
             </div>
 
@@ -373,7 +377,6 @@ export default function AddStockPage() {
       {/* Payment Modal */}
       {addStockRecordModalOpen && (
         <AddStockRecordModal
-          totalAmount={subtotal}
           onClose={() => {
             setAddStockRecordModalOpen(false);
           }}

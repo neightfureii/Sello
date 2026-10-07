@@ -3,7 +3,6 @@ import { X } from "lucide-react";
 
 interface PaymentModalProps {
   isOpen: boolean;
-  totalAmount: number;
   onClose: () => void;
   onComplete: (paymentMethod: string) => void;
 }

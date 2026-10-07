@@ -205,7 +205,7 @@ export default function DashboardPage() {
           {/* "All" Button */}
           <button
             onClick={() => setActiveCategory("All")}
-            className={`flex flex-col items-center justify-center min-w-[72px] h-[76px] transition-all rounded-2xl p-1 pb-2 shadow-sm border ${
+            className={`flex flex-col items-center justify-center min-w-[72px] h-[76px] transition-all rounded-2xl p-1 pb-2 shadow-sm border hover:cursor-pointer ${
               activeCategory === "All"
                 ? "border-blue-200 bg-blue-100 text-sello-blue"
                 : "border-gray-100 text-gray-700"
@@ -219,7 +219,7 @@ export default function DashboardPage() {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`flex flex-col items-center gap-1.5 min-w-[72px] transition-all rounded-2xl p-1 pb-2 shadow-sm border ${
+              className={`flex flex-col items-center gap-1.5 min-w-[72px] transition-all rounded-2xl p-1 pb-2 shadow-sm border hover:cursor-pointer ${
                 activeCategory === cat.id
                   ? "border-blue-200 bg-blue-100"
                   : "border-gray-100"
@@ -417,13 +417,13 @@ export default function DashboardPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setCartItems([])}
-                className="flex-1 border border-[#8daff2] bg-white text-sello-blue font-semibold py-3 rounded-full hover:bg-blue-50 transition-colors text-[15px]"
+                className="flex-1 border border-[#8daff2] bg-white text-sello-blue font-semibold py-3 rounded-full hover:bg-blue-50 transition-colors text-[15px] hover:cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={() => setPaymentModalOpen(true)}
-                className="flex-1 bg-[#3770E6] text-white font-semibold py-3 rounded-full hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 text-[15px]"
+                className="flex-1 bg-[#3770E6] text-white font-semibold py-3 rounded-full hover:bg-blue-700 transition-colors shadow-md shadow-blue-200 text-[15px] hover:cursor-pointer"
               >
                 Place Order
               </button>
