@@ -1,23 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import BackButton from "../components/BackButton";
-import { api } from "../api";
+import { api, type SaleRecord } from "../api";
 import { Search, Calendar, ChevronDown, ArrowUpDown } from "lucide-react";
 import { useToast } from "../context/ToastContext";
-
-interface SaleRecord {
-  id: string;
-  billNo: string;
-  paymentMethod: string;
-  totalAmount: number;
-  status: string;
-  createdAt: string;
-}
+import SaleRecordModal from "../components/SaleRecordModal";
 
 export default function SaleHistoryPage() {
   const { showToast } = useToast();
   const [sales, setSales] = useState<SaleRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [saleRecordModalOpen, setSaleRecordModalOpen] = useState(false);
+  const [selectedSaleRecord, setSelectedSaleRecord] =
+    useState<SaleRecord | null>(null);
 
   const loadSales = useCallback(() => {
     setLoading(true);
@@ -56,7 +51,10 @@ export default function SaleHistoryPage() {
       <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
         {/* Search Bar */}
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            size={18}
+          />
           <input
             type="text"
             placeholder="Search"
@@ -89,54 +87,78 @@ export default function SaleHistoryPage() {
             <thead>
               <tr className="bg-[#dce9fd] text-gray-800 text-xs font-extrabold border-b border-gray-200">
                 <th className="py-4 px-6">Date</th>
-                <th className="py-4 px-6">Invoice No</th>
+                <th className="py-4 px-6">Bill No</th>
                 <th className="py-4 px-6">Payment method</th>
                 <th className="py-4 px-6 text-right">Amount (LKR)</th>
+                <th className="py-4 px-6 text-right">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-gray-400 font-medium">
+                  <td
+                    colSpan={4}
+                    className="py-8 text-center text-gray-400 font-medium"
+                  >
                     Loading sales records...
                   </td>
                 </tr>
               ) : filteredSales.length > 0 ? (
                 filteredSales.map((sale) => {
                   const isReverted = sale.status === "reverted";
-                  const formattedDate = new Date(sale.createdAt).toLocaleDateString("en-GB");
+                  const formattedDate = new Date(
+                    sale.createdAt,
+                  ).toLocaleDateString("en-GB");
 
                   return (
                     <tr
                       key={sale.id}
-                      className={`transition-colors ${
-                        isReverted ? "bg-rose-50/60 hover:bg-rose-50" : "hover:bg-blue-50/30"
+                      className={`transition-colors hover:cursor-pointer ${
+                        isReverted
+                          ? "bg-rose-50/60 hover:bg-rose-50"
+                          : "hover:bg-blue-50/30"
                       }`}
+                      onClick={() => {
+                        setSaleRecordModalOpen(true);
+                        setSelectedSaleRecord(sale);
+                      }}
                     >
-                      <td className="py-4 px-6 font-medium text-gray-800">{formattedDate}</td>
-                      <td className="py-4 px-6 font-bold text-gray-900">{sale.billNo}</td>
+                      <td className="py-4 px-6 font-medium text-gray-800">
+                        {formattedDate}
+                      </td>
+                      <td className="py-4 px-6 font-bold text-gray-900">
+                        {sale.billNo}
+                      </td>
                       <td className="py-4 px-6">
-                        {isReverted ? (
-                          <span className="text-rose-600 font-bold">Reverted</span>
-                        ) : (
-                          <span className="text-gray-700 font-medium capitalize">
-                            {sale.paymentMethod?.replace("_", " ")}
-                          </span>
-                        )}
+                        <span className="text-gray-700 font-medium capitalize">
+                          {sale.paymentMethod?.replace("_", " ")}
+                        </span>
                       </td>
                       <td
                         className={`py-4 px-6 text-right font-extrabold ${
-                          isReverted ? "text-gray-400 line-through" : "text-emerald-600"
+                          isReverted
+                            ? "text-gray-400 line-through"
+                            : "text-emerald-600"
                         }`}
                       >
                         {Number(sale.totalAmount).toFixed(2)}
+                      </td>
+                      <td>
+                        <span
+                          className={`font-bold ${isReverted ?? "text-rose-600"}`}
+                        >
+                          {sale.status}
+                        </span>
                       </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-gray-400 font-medium">
+                  <td
+                    colSpan={4}
+                    className="py-8 text-center text-gray-400 font-medium"
+                  >
                     No sales records found.
                   </td>
                 </tr>
@@ -145,6 +167,20 @@ export default function SaleHistoryPage() {
           </table>
         </div>
       </div>
+
+      {saleRecordModalOpen && selectedSaleRecord && (
+        <SaleRecordModal
+          saleRecord={selectedSaleRecord}
+          onClose={() => {
+            setSaleRecordModalOpen(false);
+            setSelectedSaleRecord(null);
+          }}
+          onRevertSuccess={() => {
+            loadSales();
+          }}
+          isOpen={saleRecordModalOpen}
+        />
+      )}
     </div>
   );
 }

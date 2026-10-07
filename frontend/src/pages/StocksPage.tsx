@@ -1,47 +1,42 @@
 import { useCallback, useEffect, useState } from "react";
 import BackButton from "../components/BackButton";
-import { api } from "../api";
+import { api, type StockRecord } from "../api";
 import { Search, Calendar, ChevronDown, ArrowUpDown } from "lucide-react";
 import { useToast } from "../context/ToastContext";
-
-interface SaleRecord {
-  id: string;
-  billNo: string;
-  paymentMethod: string;
-  totalAmount: number;
-  status: string;
-  createdAt: string;
-}
+import StockRecordModal from "../components/StockRecordModal";
 
 export default function StocksPage() {
   const { showToast } = useToast();
-  const [sales, setSales] = useState<SaleRecord[]>([]);
+  const [stockRecords, setStockRecords] = useState<StockRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [stockRecordModalOpen, setStockRecordModalOpen] = useState(false);
+    const [selectedStockRecord, setSelectedStockRecord] =
+      useState<StockRecord | null>(null);
 
-  const loadSales = useCallback(() => {
+  const loadStockRecords = useCallback(() => {
     setLoading(true);
-    api<{ sales: SaleRecord[] } | SaleRecord[]>("/sales")
+    api<{ stockRecords: StockRecord[] } | StockRecord[]>("/stock-records")
       .then((d) => {
-        const data = Array.isArray(d) ? d : d?.sales;
-        setSales(data || []);
+        const data = Array.isArray(d) ? d : d?.stockRecords;
+        setStockRecords(data || []);
       })
       .catch((err) => {
-        showToast(err.message || "Failed to load sales records", "error");
+        showToast(err.message || "Failed to load stock records", "error");
       })
       .finally(() => setLoading(false));
   }, [showToast]);
 
   useEffect(() => {
-    loadSales();
-  }, [loadSales]);
+    loadStockRecords();
+  }, [loadStockRecords]);
 
-  // Filter sales based on search query (invoice no or payment method)
-  const filteredSales = sales.filter((s) => {
+  // Filter stock records based on search query (invoice no or payment method)
+  const filteredStockRecords = stockRecords.filter((s) => {
     const query = searchQuery.toLowerCase();
     return (
-      s.billNo?.toLowerCase().includes(query) ||
-      s.paymentMethod?.toLowerCase().includes(query)
+      s.stockReference?.toLowerCase().includes(query) ||
+      s.paymentSource?.toLowerCase().includes(query)
     );
   });
 
@@ -85,16 +80,17 @@ export default function StocksPage() {
         </div>
       </div>
 
-      {/* Sales Table Container */}
+      {/* Stock Records Table Container */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#dce9fd] text-gray-800 text-xs font-extrabold border-b border-gray-200">
-                <th className="py-4 px-6">Date</th>
-                <th className="py-4 px-6">Invoice No</th>
-                <th className="py-4 px-6">Payment method</th>
+                <th className="py-4 px-6">Date Acquired</th>
+                <th className="py-4 px-6">Ref No</th>
+                <th className="py-4 px-6">Payment source</th>
                 <th className="py-4 px-6 text-right">Amount (LKR)</th>
+                <th className="py-4 px-6">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
@@ -104,20 +100,24 @@ export default function StocksPage() {
                     colSpan={4}
                     className="py-8 text-center text-gray-400 font-medium"
                   >
-                    Loading sales records...
+                    Loading stock records...
                   </td>
                 </tr>
-              ) : filteredSales.length > 0 ? (
-                filteredSales.map((sale) => {
-                  const isReverted = sale.status === "reverted";
+              ) : filteredStockRecords.length > 0 ? (
+                filteredStockRecords.map((stockRecord) => {
+                  const isReverted = stockRecord.status === "reverted";
                   const formattedDate = new Date(
-                    sale.createdAt,
+                    stockRecord.createdAt,
                   ).toLocaleDateString("en-GB");
 
                   return (
                     <tr
-                      key={sale.id}
-                      className={`transition-colors ${
+                      key={stockRecord.id}
+                      onClick={() => {
+                        setStockRecordModalOpen(true);
+                        setSelectedStockRecord(stockRecord);
+                      }}
+                      className={`transition-colors hover:cursor-pointer ${
                         isReverted
                           ? "bg-rose-50/60 hover:bg-rose-50"
                           : "hover:bg-blue-50/30"
@@ -127,18 +127,12 @@ export default function StocksPage() {
                         {formattedDate}
                       </td>
                       <td className="py-4 px-6 font-bold text-gray-900">
-                        {sale.billNo}
+                        {stockRecord.stockReference}
                       </td>
                       <td className="py-4 px-6">
-                        {isReverted ? (
-                          <span className="text-rose-600 font-bold">
-                            Reverted
-                          </span>
-                        ) : (
-                          <span className="text-gray-700 font-medium capitalize">
-                            {sale.paymentMethod?.replace("_", " ")}
-                          </span>
-                        )}
+                        <span className="text-gray-700 font-medium capitalize">
+                          {stockRecord.paymentSource?.replace("_", " ")}
+                        </span>
                       </td>
                       <td
                         className={`py-4 px-6 text-right font-extrabold ${
@@ -147,7 +141,14 @@ export default function StocksPage() {
                             : "text-emerald-600"
                         }`}
                       >
-                        {Number(sale.totalAmount).toFixed(2)}
+                        {Number(stockRecord.totalAmount).toFixed(2)}
+                      </td>
+                      <td>
+                        <span
+                          className={`font-bold ${isReverted ?? "text-rose-600"}`}
+                        >
+                          {stockRecord.status}
+                        </span>
                       </td>
                     </tr>
                   );
@@ -158,7 +159,7 @@ export default function StocksPage() {
                     colSpan={4}
                     className="py-8 text-center text-gray-400 font-medium"
                   >
-                    No sales records found.
+                    No stock records found.
                   </td>
                 </tr>
               )}
@@ -166,6 +167,20 @@ export default function StocksPage() {
           </table>
         </div>
       </div>
+
+      {stockRecordModalOpen && selectedStockRecord && (
+              <StockRecordModal
+                stockRecord={selectedStockRecord}
+                onClose={() => {
+                  setStockRecordModalOpen(false);
+                  setSelectedStockRecord(null);
+                }}
+                onRevertSuccess={() => {
+                  loadStockRecords();
+                }}
+                isOpen={stockRecordModalOpen}
+              />
+            )}
     </div>
   );
 }

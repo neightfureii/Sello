@@ -7,7 +7,18 @@ router.use(requireAuth);
 
 router.get("/", async (_req, res) => {
   const sales = await prisma.sale.findMany({
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
+    include: {
+      saleItems: {
+        include: {
+          stock: {
+            include: {
+              product: true,
+            },
+          },
+        },
+      },
+    },
   });
   res.json({ sales });
 });
@@ -18,7 +29,9 @@ router.post("/", async (req, res) => {
   const { paymentMethod, totalAmount, discount, items } = req.body ?? {};
 
   if (!shopId) {
-    return res.status(400).json({ error: "User is not associated with any shop" });
+    return res
+      .status(400)
+      .json({ error: "User is not associated with any shop" });
   }
 
   if (!items || !Array.isArray(items) || items.length === 0) {
@@ -49,7 +62,7 @@ router.post("/", async (req, res) => {
         const productId = cartItem.productId;
 
         // Fetch all available stock batches for this product in this shop, oldest first.
-        // (Note: You can calculate remaining quantity per stock batch by checking total quantityReceived minus what's already been sold, 
+        // (Note: You can calculate remaining quantity per stock batch by checking total quantityReceived minus what's already been sold,
         // or track remaining quantity directly. For simplicity in standard POS, we fetch active batches ordered by acquisition.)
         const availableStocks = await tx.stock.findMany({
           where: {
@@ -68,12 +81,16 @@ router.post("/", async (req, res) => {
             _sum: { quantity: true },
           });
           const soldQtyFromBatch = soldAggregate._sum.quantity || 0;
-          const batchRemainingQty = Number(batch.quantityReceived) - soldQtyFromBatch;
+          const batchRemainingQty =
+            Number(batch.quantityReceived) - soldQtyFromBatch;
 
           if (batchRemainingQty <= 0) continue; // Batch is fully exhausted
 
           // Determine how much to take from this batch
-          const qtyTakenFromBatch = Math.min(remainingQtyToDeduct, batchRemainingQty);
+          const qtyTakenFromBatch = Math.min(
+            remainingQtyToDeduct,
+            batchRemainingQty,
+          );
 
           // Create the sale item linked to this specific stock batch
           const saleItem = await tx.saleItem.create({
@@ -101,7 +118,45 @@ router.post("/", async (req, res) => {
     return res.status(201).json(result);
   } catch (err: any) {
     console.error("Sale processing error:", err);
-    return res.status(500).json({ error: err.message || "Failed to process sale" });
+    return res
+      .status(500)
+      .json({ error: err.message || "Failed to process sale" });
+  }
+});
+
+router.patch("/:id/revert", async (req, res) => {
+  const shopId = req.user?.shopId;
+  const saleId = req.params.id;
+
+  if (!shopId) {
+    return res.status(400).json({ error: "User is not associated with any shop" });
+  }
+
+  try {
+    const updatedSale = await prisma.$transaction(async (tx) => {
+      const sale = await tx.sale.findFirst({
+        where: { id: saleId, shopId },
+      });
+
+      if (!sale) {
+        throw new Error("Sale record not found");
+      }
+
+      if (sale.status === "reverted") {
+        throw new Error("Bill is already reverted");
+      }
+
+      // Update sale status to reverted
+      return await tx.sale.update({
+        where: { id: saleId },
+        data: { status: "reverted" },
+      });
+    });
+
+    return res.json({ message: "Bill reverted successfully", updatedSale });
+  } catch (err: any) {
+    console.error("Revert sale error:", err);
+    return res.status(500).json({ error: err.message || "Failed to revert bill" });
   }
 });
 
