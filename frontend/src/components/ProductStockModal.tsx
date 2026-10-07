@@ -2,7 +2,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { type Product } from "../api";
 
-interface ProductModalProps {
+interface ProductStockModalProps {
   product: Product;
   isOpen: boolean;
   onClose: () => void;
@@ -14,12 +14,12 @@ interface ProductModalProps {
   ) => void;
 }
 
-export default function ProductModal({
+export default function ProductStockModal({
   product,
   isOpen,
   onClose,
   onAdd,
-}: ProductModalProps) {
+}: ProductStockModalProps) {
   const [qty, setQty] = useState("");
   const [unitCostDisplay, setUnitCostDisplay] = useState("");
   const [selectedUnit, setSelectedUnit] = useState(product.unit || "kg");
