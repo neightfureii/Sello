@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 
-interface PaymentModalProps {
+interface AddStockRecordModalProps {
   isOpen: boolean;
-  totalAmount: number;
   onClose: () => void;
   onComplete: (paymentMethod: string) => void;
 }
@@ -12,7 +11,7 @@ export default function AddStockRecordModal({
   isOpen,
   onClose,
   onComplete,
-}: PaymentModalProps) {
+}: AddStockRecordModalProps) {
   const [method, setMethod] = useState<
     "shop_cash" | "shop_bank" | "owner_cash"
   >("shop_cash");

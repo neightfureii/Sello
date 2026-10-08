@@ -4,15 +4,17 @@ import { api, type StockRecord } from "../api";
 import { Search, Calendar, ChevronDown, ArrowUpDown } from "lucide-react";
 import { useToast } from "../context/ToastContext";
 import StockRecordModal from "../components/StockRecordModal";
+import { useAuth } from "../auth/AuthContext";
 
 export default function StocksPage() {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [stockRecords, setStockRecords] = useState<StockRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [stockRecordModalOpen, setStockRecordModalOpen] = useState(false);
-    const [selectedStockRecord, setSelectedStockRecord] =
-      useState<StockRecord | null>(null);
+  const [selectedStockRecord, setSelectedStockRecord] =
+    useState<StockRecord | null>(null);
 
   const loadStockRecords = useCallback(() => {
     setLoading(true);
@@ -57,7 +59,7 @@ export default function StocksPage() {
           />
           <input
             type="text"
-            placeholder="Search"
+            placeholder="Search by Ref No"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#e5edfa] border border-transparent focus:bg-white focus:border-sello-blue outline-none rounded-full py-3 pl-11 pr-4 text-sm text-gray-800 placeholder-gray-500 font-medium transition-all"
@@ -91,6 +93,7 @@ export default function StocksPage() {
                 <th className="py-4 px-6">Payment source</th>
                 <th className="py-4 px-6 text-right">Amount (LKR)</th>
                 <th className="py-4 px-6">Status</th>
+                {user?.role === "admin" && <th className="py-4 px-6">Shop</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
@@ -150,6 +153,11 @@ export default function StocksPage() {
                           {stockRecord.status}
                         </span>
                       </td>
+                      {user?.role === "admin" && (
+                        <td className="py-4 px-6 text-gray-900">
+                        {stockRecord.shop.name}
+                      </td>
+                      )}
                     </tr>
                   );
                 })
@@ -169,18 +177,18 @@ export default function StocksPage() {
       </div>
 
       {stockRecordModalOpen && selectedStockRecord && (
-              <StockRecordModal
-                stockRecord={selectedStockRecord}
-                onClose={() => {
-                  setStockRecordModalOpen(false);
-                  setSelectedStockRecord(null);
-                }}
-                onRevertSuccess={() => {
-                  loadStockRecords();
-                }}
-                isOpen={stockRecordModalOpen}
-              />
-            )}
+        <StockRecordModal
+          stockRecord={selectedStockRecord}
+          onClose={() => {
+            setStockRecordModalOpen(false);
+            setSelectedStockRecord(null);
+          }}
+          onRevertSuccess={() => {
+            loadStockRecords();
+          }}
+          isOpen={stockRecordModalOpen}
+        />
+      )}
     </div>
   );
 }

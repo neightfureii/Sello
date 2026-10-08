@@ -141,6 +141,7 @@ router.get("/users", requireAuth, async (_req, res) => {
   const users = await prisma.user.findMany({
     orderBy: { fullName: "asc" },
     include: { shop: true },
+    where: { isActive: true },
   });
   res.json({ users });
 });
@@ -171,6 +172,67 @@ router.patch(
     } catch (err) {
       console.error("Profile update error:", err);
       res.status(500).json({ error: "Failed to update profile" });
+    }
+  },
+);
+
+router.patch(
+  "/users/:id",
+  requireAuth,
+  requireRole("admin"),
+  upload.single("image"),
+  async (req, res) => {
+    const userId = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+    const imageUrl = req.file?.path;
+    const imageCldPubId = req.file?.filename;
+    const { fullName, email, role } = req.body ?? {};
+
+    try {
+      const updateData: any = {
+        fullName,
+        email,
+        role,
+      };
+
+      if (imageUrl) {
+        updateData.imageUrl = imageUrl;
+        updateData.imageCldPubId = imageCldPubId;
+      }
+
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: updateData,
+      });
+
+      res.json({ message: "User updated successfully", updatedUser });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  },
+);
+
+router.patch(
+  "/users/:id/delete",
+  requireAuth,
+  requireRole("admin"),
+  async (req, res) => {
+    const userId = Array.isArray(req.params.id)
+      ? req.params.id[0]
+      : req.params.id;
+
+    try {
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: { isActive: false },
+      });
+
+      res.json({ message: "User updated successfully", updatedUser });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to update user" });
     }
   },
 );

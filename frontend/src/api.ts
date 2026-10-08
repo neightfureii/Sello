@@ -1,4 +1,9 @@
-export type Role = 'admin' | 'manager' | 'cashier';
+export type Role = "admin" | "manager" | "cashier";
+export const ROLE_OPTIONS = [
+  { value: "admin", label: "Admin" },
+  { value: "manager", label: "Manager" },
+  { value: "cashier", label: "Cashier" },
+];
 
 export interface Shop {
   id: string;
@@ -12,7 +17,7 @@ export interface Shop {
 }
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   fullName: string;
   role: Role;
@@ -65,6 +70,7 @@ export interface StockCartItem {
 export interface StockRecord {
   id: string;
   shopId: string;
+  shop: Shop;
   userId: string;
   user: User;
   stockReference: string;
@@ -94,6 +100,7 @@ export interface Stock {
 export interface SaleRecord {
   id: string;
   shopId: string;
+  shop: Shop;
   billNo: string;
   totalAmount: number;
   discount: number;
@@ -116,7 +123,10 @@ export interface SaleItem {
   updatedAt: string;
 }
 
-const configuredApiUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim().replace(
+  /\/+$/,
+  "",
+);
 const apiBaseUrl =
   configuredApiUrl && import.meta.env.PROD
     ? `${configuredApiUrl.replace(/\/api$/, "")}/api`
@@ -130,13 +140,17 @@ export function apiUrl(path: string): string {
   return `${apiBaseUrl}/${path.replace(/^\/+/, "")}`;
 }
 
-export async function api<T = unknown>(path: string, options: RequestInit = {}): Promise<T> {
+export async function api<T = unknown>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
   const res = await fetch(apiUrl(path), {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
     ...options,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((data as { error?: string }).error || 'Request failed');
+  if (!res.ok)
+    throw new Error((data as { error?: string }).error || "Request failed");
   return data as T;
 }

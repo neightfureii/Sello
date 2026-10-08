@@ -2,7 +2,7 @@ import { useState } from "react";
 import { X, AlertCircle, Apple, CheckCircle2 } from "lucide-react";
 import { apiUrl, type Stock, type StockRecord } from "../api";
 
-interface SaleRecordModalProps {
+interface StockRecordModalProps {
   stockRecord: StockRecord;
   isOpen: boolean;
   onClose: () => void;
@@ -14,7 +14,7 @@ export default function StockRecordModal({
   isOpen,
   onClose,
   onRevertSuccess,
-}: SaleRecordModalProps) {
+}: StockRecordModalProps) {
   const [step, setStep] = useState<"details" | "confirm" | "success">(
     "details",
   );

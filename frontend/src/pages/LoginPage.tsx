@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import logo from "../../public/images/logo.png";
-import login_bg from "../../public/images/login_bg.png";
-import login_bg_mobile from "../../public/images/login_bg_mobile.png";
+import logo from "/images/logo.png";
+import login_bg from "/images/login_bg.png";
+import login_bg_mobile from "/images/login_bg_mobile.png";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from "lucide-react";

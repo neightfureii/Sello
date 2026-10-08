@@ -7,13 +7,16 @@ const router = Router();
 router.use(requireAuth);
 
 router.get("/", async (req, res) => {
-  const shopId = (req as any).user?.shopId;
-  
+  const user = (req as any).user;
+  const shopId = user?.shopId;
+  const role = user?.role;
+  const whereCondition = role === "admin" ? {} : { shopId };
+
   const categories = await prisma.category.findMany({
     orderBy: { name: "asc" },
-    where: { shopId: shopId },
-    include: { 
-      shop: true, 
+    where: whereCondition,
+    include: {
+      shop: true,
       _count: {
         select: { products: true },
       },

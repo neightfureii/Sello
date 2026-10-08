@@ -95,6 +95,7 @@ model Shop {
   name          String   @db.VarChar(255)
   location      String?  @db.VarChar(255)
   type          ShopType
+  isActive      Boolean   @default(true) @map("is_active")
   imageUrl      String?  @map("image_url")
   imageCldPubId String?  @map("image_cld_pub_id")
   createdAt     DateTime @default(now()) @map("created_at")
@@ -116,6 +117,7 @@ model Category {
   id            String   @id @default(uuid()) @db.Uuid
   name          String   @db.VarChar(255)
   description   String?  @db.VarChar(255)
+  isActive      Boolean  @default(true) @map("is_active")
   imageUrl      String?  @map("image_url")
   imageCldPubId String?  @map("image_cld_pub_id")
   shopId        String   @map("shop_id") @db.Uuid
@@ -135,6 +137,7 @@ model Product {
   minStockAllowed Int      @default(0) @map("min_stock_allowed")
   unitPrice       Decimal  @default(0.00) @map("unit_price") @db.Decimal(10, 2)
   unit            UnitType @default(pcs)
+  isActive        Boolean  @default(true) @map("is_active")
   imageUrl        String?  @map("image_url")
   imageCldPubId   String?  @map("image_cld_pub_id")
   categoryId      String   @map("category_id") @db.Uuid

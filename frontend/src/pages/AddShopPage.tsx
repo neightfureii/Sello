@@ -15,7 +15,7 @@ export default function AddShopPage() {
   const [form, setForm] = useState({
     location: "",
     name: "",
-    type: SHOP_TYPE_DETAILS[0].value as ShopType,
+    type: "",
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -73,10 +73,7 @@ export default function AddShopPage() {
         <h3 className="font-bold text-gray-900 text-base">Add New Shop</h3>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="p-6 lg:p-8 flex flex-col gap-5"
-      >
+      <form onSubmit={handleSubmit} className="p-6 lg:p-8 flex flex-col gap-5">
         {/* Profile Image Preview & Uploader */}
         <div className="flex items-center gap-5">
           <div className="w-20 h-20 rounded-2xl bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center shrink-0 relative">
@@ -123,9 +120,13 @@ export default function AddShopPage() {
           <label className="text-xs font-bold text-gray-700">Type</label>
           <select
             value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value as ShopType })}
+            onChange={(e) =>
+              setForm({ ...form, type: e.target.value as ShopType })
+            }
             className="w-full bg-[#f0f4fa] border border-transparent focus:bg-white focus:border-sello-blue outline-none rounded-xl px-4 py-3 text-sm text-gray-800 font-medium transition-all cursor-pointer"
           >
+            <option value="">Select a type</option>
+
             {SHOP_TYPE_DETAILS.map((t) => (
               <option key={t.value} value={t.value}>
                 {t.label}

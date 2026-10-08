@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
-import logo_short from "../../public/images/logo_short.png";
+import logo_short from "/images/logo_short.png";
 import {
   Archive,
   Calculator,

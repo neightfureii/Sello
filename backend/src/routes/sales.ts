@@ -6,8 +6,14 @@ const router = Router();
 router.use(requireAuth);
 
 router.get("/", async (_req, res) => {
+  const user = (_req as any).user;
+  const shopId = user?.shopId;
+  const role = user?.role;
+  const whereCondition = role === "admin" ? {} : { shopId };
+
   const sales = await prisma.sale.findMany({
     orderBy: { createdAt: "desc" },
+    where: whereCondition,
     include: {
       saleItems: {
         include: {
@@ -18,6 +24,7 @@ router.get("/", async (_req, res) => {
           },
         },
       },
+      shop: true,
     },
   });
   res.json({ sales });
@@ -129,7 +136,9 @@ router.patch("/:id/revert", async (req, res) => {
   const saleId = req.params.id;
 
   if (!shopId) {
-    return res.status(400).json({ error: "User is not associated with any shop" });
+    return res
+      .status(400)
+      .json({ error: "User is not associated with any shop" });
   }
 
   try {
@@ -156,7 +165,9 @@ router.patch("/:id/revert", async (req, res) => {
     return res.json({ message: "Bill reverted successfully", updatedSale });
   } catch (err: any) {
     console.error("Revert sale error:", err);
-    return res.status(500).json({ error: err.message || "Failed to revert bill" });
+    return res
+      .status(500)
+      .json({ error: err.message || "Failed to revert bill" });
   }
 });
 
