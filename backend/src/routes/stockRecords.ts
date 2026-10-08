@@ -8,8 +8,14 @@ const router = Router();
 router.use(requireAuth);
 
 router.get("/", async (_req, res) => {
+  const user = (_req as any).user;
+  const shopId = user?.shopId;
+  const role = user?.role;
+  const whereCondition = role === "admin" ? {} : { shopId };
+
   const stockRecords = await prisma.stockRecord.findMany({
     orderBy: { createdAt: "asc" },
+    where: whereCondition,
     include: {
       user: true,
       stocks: {
@@ -17,6 +23,7 @@ router.get("/", async (_req, res) => {
           product: true,
         },
       },
+      shop: true,
     },
   });
   res.json({ stockRecords });
@@ -89,7 +96,9 @@ router.patch("/:id/revert", async (req, res) => {
   const stockRecordId = req.params.id;
 
   if (!shopId) {
-    return res.status(400).json({ error: "User is not associated with any shop" });
+    return res
+      .status(400)
+      .json({ error: "User is not associated with any shop" });
   }
 
   try {
@@ -113,10 +122,15 @@ router.patch("/:id/revert", async (req, res) => {
       });
     });
 
-    return res.json({ message: "Stock record reverted successfully", updatedStockRecord });
+    return res.json({
+      message: "Stock record reverted successfully",
+      updatedStockRecord,
+    });
   } catch (err: any) {
     console.error("Revert stock record error:", err);
-    return res.status(500).json({ error: err.message || "Failed to revert stock record" });
+    return res
+      .status(500)
+      .json({ error: err.message || "Failed to revert stock record" });
   }
 });
 

@@ -4,9 +4,11 @@ import { useToast } from "../context/ToastContext";
 import { Plus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
+import { useAuth } from "../auth/AuthContext";
 
 export default function CategoriesPage() {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -49,8 +51,8 @@ export default function CategoriesPage() {
               <tr className="bg-[#f0f4fa] text-gray-700 text-xs font-extrabold border-b border-gray-100">
                 <th className="py-4 px-6">Name</th>
                 <th className="py-4 px-6">Description</th>
-                <th className="py-4 px-6">Shop</th>
                 <th className="py-4 px-6">No of Products</th>
+                {user?.role === "admin" && <th className="py-4 px-6">Shop</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
@@ -77,12 +79,12 @@ export default function CategoriesPage() {
                     <td className="py-4 px-6 text-gray-600 font-medium">
                       {u.description}
                     </td>
-                    <td className="py-4 px-6">
-                        {u.shop.name}
-                    </td>
                     <td className="py-4 px-6 text-gray-700 font-semibold">
                       {u.noOfProducts || 0}
                     </td>
+                    {user?.role === "admin" && (
+                      <td className="py-4 px-6">{u.shop.name}</td>
+                    )}
                   </tr>
                 ))
               ) : (
