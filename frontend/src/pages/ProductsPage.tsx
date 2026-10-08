@@ -4,9 +4,11 @@ import { useToast } from "../context/ToastContext";
 import { Plus, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
+import { useAuth } from "../auth/AuthContext";
 
 export default function ProductsPage() {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
 
@@ -52,8 +54,8 @@ export default function ProductsPage() {
                 <th className="py-4 px-6">Min Stock Allowed</th>
                 <th className="py-4 px-6">Unit</th>
                 <th className="py-4 px-6">Unit Price</th>
-                <th className="py-4 px-6">Shop</th>
                 <th className="py-4 px-6">Available Qty</th>
+                {user?.role === "admin" && <th className="py-4 px-6">Shop</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
@@ -91,12 +93,14 @@ export default function ProductsPage() {
                     <td className="py-4 px-6 text-gray-700 font-semibold">
                       Rs. {Number(u.unitPrice).toFixed(2)}
                     </td>
-                    <td className="py-4 px-6 text-gray-700 font-semibold">
-                      {u.shop?.name}
-                    </td>
                     <td className="py-4 px-6 font-extrabold text-gray-900">
                       {u.availableQty} {u.unit}
                     </td>
+                    {user?.role === "admin" && (
+                      <td className="py-4 px-6 text-gray-700 font-semibold">
+                        {u.shop?.name}
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (

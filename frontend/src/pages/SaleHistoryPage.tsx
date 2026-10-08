@@ -4,9 +4,11 @@ import { api, type SaleRecord } from "../api";
 import { Search, Calendar, ChevronDown, ArrowUpDown } from "lucide-react";
 import { useToast } from "../context/ToastContext";
 import SaleRecordModal from "../components/SaleRecordModal";
+import { useAuth } from "../auth/AuthContext";
 
 export default function SaleHistoryPage() {
   const { showToast } = useToast();
+  const { user } = useAuth();
   const [sales, setSales] = useState<SaleRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -91,6 +93,9 @@ export default function SaleHistoryPage() {
                 <th className="py-4 px-6">Payment method</th>
                 <th className="py-4 px-6 text-right">Amount (LKR)</th>
                 <th className="py-4 px-6 text-right">Status</th>
+                {user?.role == "admin" && (
+                  <th className="py-4 px-6 text-right">Shop</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
@@ -150,6 +155,11 @@ export default function SaleHistoryPage() {
                           {sale.status}
                         </span>
                       </td>
+                      {user?.role == "admin" && (
+                        <td className="py-4 px-6 font-bold text-gray-900">
+                          {sale.shop.name}
+                        </td>
+                      )}
                     </tr>
                   );
                 })
