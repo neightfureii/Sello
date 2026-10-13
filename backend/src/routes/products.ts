@@ -25,7 +25,7 @@ router.get("/", async (req, res) => {
               sale: true,
             },
           },
-          stockRecord: true, // Includes stock record to check status
+          stockRecord: true,
         },
       },
     },

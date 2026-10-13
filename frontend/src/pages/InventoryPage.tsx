@@ -6,6 +6,9 @@ import {
   Plus,
   LayoutGrid,
   ArrowRight,
+  ArchiveIcon,
+  AlertTriangle,
+  XCircle,
 } from "lucide-react";
 import { Button } from "../components/Button";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +23,9 @@ export default function InventoryPage() {
   const [error, setError] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "LOW" | "OUT">(
+    "ALL",
+  );
 
   const loadData = useCallback(() => {
     api<{ stockRecords: StockRecord[] } | StockRecord[]>("/stock-records")
@@ -46,6 +52,16 @@ export default function InventoryPage() {
 
   useEffect(loadData, [loadData]);
 
+  // Counts for quick badges
+  const outOfStockCount = products.filter((p) => p.availableQty === 0).length;
+  const lowStockCount = products.filter(
+    (p) =>
+      p.availableQty !== undefined &&
+      p.minStockAllowed !== undefined &&
+      p.availableQty > 0 &&
+      p.availableQty < p.minStockAllowed,
+  ).length;
+
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name
       .toLowerCase()
@@ -54,7 +70,18 @@ export default function InventoryPage() {
     const matchesCategory =
       activeCategory === "All" || p.categoryId === activeCategory;
 
-    return matchesSearch && matchesCategory;
+    const isOutOfStock = p.availableQty === 0;
+    const isLowStock =
+      p.availableQty !== undefined &&
+      p.minStockAllowed !== undefined &&
+      p.availableQty > 0 &&
+      p.availableQty < p.minStockAllowed;
+
+    let matchesStatus = true;
+    if (statusFilter === "OUT") matchesStatus = isOutOfStock;
+    if (statusFilter === "LOW") matchesStatus = isLowStock;
+
+    return matchesSearch && matchesCategory && matchesStatus;
   });
 
   const activeCategoryName =
@@ -166,7 +193,7 @@ export default function InventoryPage() {
       )}
 
       {/* --- SEARCH BAR --- */}
-      <div className="sticky top-0 py-3 z-30 -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="sticky top-0 py-2 z-30 -mx-4 px-4 md:mx-0 md:px-0">
         <div className="relative">
           <Search
             className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"
@@ -227,6 +254,44 @@ export default function InventoryPage() {
         </div>
       </div>
 
+      {/* --- INVENTORY ALERT QUICK FILTER TABS --- */}
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          onClick={() => setStatusFilter("ALL")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+            statusFilter === "ALL"
+              ? "bg-gray-900 text-white border-gray-900 shadow-sm"
+              : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+          }`}
+        >
+          All Products ({products.length})
+        </button>
+
+        <button
+          onClick={() => setStatusFilter("LOW")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 border ${
+            statusFilter === "LOW"
+              ? "bg-amber-600 text-white border-amber-600 shadow-sm"
+              : "bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100"
+          }`}
+        >
+          <AlertTriangle size={14} />
+          Low Stock ({lowStockCount})
+        </button>
+
+        <button
+          onClick={() => setStatusFilter("OUT")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 border ${
+            statusFilter === "OUT"
+              ? "bg-red-600 text-white border-red-600 shadow-sm"
+              : "bg-red-50 text-red-700 border-red-200 hover:bg-red-100"
+          }`}
+        >
+          <XCircle size={14} />
+          Out of Stock ({outOfStockCount})
+        </button>
+      </div>
+
       {/* --- PRODUCT GRID SECTION --- */}
       <div className="flex flex-col gap-4">
         <h2 className="hidden lg:block text-lg font-bold text-gray-900">
@@ -239,41 +304,86 @@ export default function InventoryPage() {
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-5">
-          {filteredProducts.map((p) => (
-            <div
-              key={p.id}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow"
-            >
-              <div className="h-32 w-full bg-gray-100 relative">
-                <img
-                  src={
-                    (p as any).imageUrl ||
-                    "https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=300&q=80"
-                  }
-                  alt={p.name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-3.5 flex flex-col flex-1 gap-2">
-                <span className="font-bold text-gray-900 text-sm leading-tight">
-                  {p.name}
-                </span>
-                <div className="flex items-baseline gap-1">
-                  <span className="font-extrabold text-gray-900 text-[14px]">
-                    Rs. {Number(p.unitPrice || 0).toFixed(2)}
+          {filteredProducts.map((p) => {
+            const isOutOfStock = p.availableQty === 0;
+            const isLowStock =
+              p.availableQty !== undefined &&
+              p.minStockAllowed !== undefined &&
+              p.availableQty > 0 &&
+              p.availableQty < p.minStockAllowed;
+
+            return (
+              <div
+                key={p.id}
+                className={`rounded-2xl border bg-white shadow-sm overflow-hidden flex flex-col transition-all relative ${
+                  isOutOfStock
+                    ? "border-red-300 ring-1 ring-red-200 opacity-80"
+                    : isLowStock
+                      ? "border-amber-300 ring-1 ring-amber-200"
+                      : "border-gray-100 hover:shadow-md"
+                }`}
+              >
+                {/* Status Badges Overlay */}
+                {isOutOfStock && (
+                  <div className="absolute top-2.5 left-2.5 z-10 bg-red-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider flex items-center gap-1">
+                    <XCircle size={12} /> Out of Stock
+                  </div>
+                )}
+                {isLowStock && !isOutOfStock && (
+                  <div className="absolute top-2.5 left-2.5 z-10 bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider flex items-center gap-1">
+                    <AlertTriangle size={12} /> Low Stock
+                  </div>
+                )}
+
+                <div
+                  className={`h-32 w-full bg-gray-100 relative ${isOutOfStock ? "grayscale-50" : ""}`}
+                >
+                  {p.imageUrl ? (
+                    <img
+                      src={p.imageUrl}
+                      alt={p.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <ArchiveIcon className="w-full h-full object-cover text-gray-200" />
+                  )}
+                </div>
+
+                <div className="p-3.5 flex flex-col flex-1 gap-2">
+                  <span className="font-bold text-gray-900 text-sm leading-tight truncate">
+                    {p.name}
                   </span>
-                  <span className="text-gray-900 font-extrabold text-[11px]">
-                    /Kg
-                  </span>
+                  <div className="flex items-center justify-between mt-auto">
+                    <div className="flex items-baseline gap-1">
+                      <span className="font-extrabold text-gray-900 text-[13px]">
+                        Rs. {Number(p.unitPrice || 0).toFixed(2)}
+                      </span>
+                    </div>
+                    {p.availableQty !== undefined && (
+                      <span
+                        className={`text-[11px] font-bold px-2 py-0.5 rounded-lg ${
+                          isOutOfStock
+                            ? "bg-red-50 text-red-700"
+                            : isLowStock
+                              ? "bg-amber-50 text-amber-700"
+                              : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        Qty: {p.availableQty}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {filteredProducts.length === 0 && (
           <div className="text-center py-10 bg-white rounded-2xl border border-gray-100">
-            <p className="text-gray-500 text-sm">No products found.</p>
+            <p className="text-gray-500 text-sm">
+              No products match the selected filter.
+            </p>
           </div>
         )}
       </div>

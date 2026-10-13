@@ -44,7 +44,7 @@ router.post(
 router.patch(
   "/:id",
   requireAuth,
-  requireRole("admin"),
+  requireRole("admin", "manager"),
   upload.single("image"),
   async (req, res) => {
     // Ensure shopId is handled as a single string

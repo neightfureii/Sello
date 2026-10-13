@@ -48,6 +48,7 @@ export interface Product {
   category?: Category;
   shopId: string;
   shop: Shop;
+  availableQty?: number;
 }
 
 export interface CartItem {
