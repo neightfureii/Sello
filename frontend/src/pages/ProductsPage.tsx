@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type Product } from "../api";
 import { useToast } from "../context/ToastContext";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, XCircle, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
 import { useAuth } from "../auth/AuthContext";
@@ -60,49 +60,88 @@ export default function ProductsPage() {
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
               {products.length > 0 ? (
-                products.map((u: any) => (
-                  <tr
-                    key={u.id}
-                    className="hover:bg-blue-50/30 transition-colors"
-                  >
-                    <td className="py-4 px-6 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center">
-                        {u.imageUrl ? (
-                          <img
-                            src={u.imageUrl}
-                            alt={u.name}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <Users size={16} className="text-gray-400" />
-                        )}
-                      </div>
-                      <span className="font-bold text-gray-900">{u.name}</span>
-                    </td>
-                    <td className="py-4 px-6 text-gray-600 font-medium">
-                      {u.category?.name}
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="px-3 py-1 bg-blue-50 text-sello-blue font-bold text-xs rounded-full uppercase tracking-wide">
-                        {u.minStockAllowed}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6 text-gray-700 font-semibold">
-                      {u.unit}
-                    </td>
-                    <td className="py-4 px-6 text-gray-700 font-semibold">
-                      Rs. {Number(u.unitPrice).toFixed(2)}
-                    </td>
-                    <td className="py-4 px-6 font-extrabold text-gray-900">
-                      {u.availableQty} {u.unit}
-                    </td>
-                    {user?.role === "admin" && (
-                      <td className="py-4 px-6 text-gray-700 font-semibold">
-                        {u.shop?.name}
+                products.map((u: Product) => {
+                  const isOutOfStock = u.availableQty === 0;
+                  const isLowStock =
+                    u.availableQty !== undefined &&
+                    u.minStockAllowed !== undefined &&
+                    u.availableQty > 0 &&
+                    u.availableQty < u.minStockAllowed;
+
+                  return (
+                    <tr
+                      key={u.id}
+                      className={`transition-colors ${
+                        isOutOfStock
+                          ? "bg-red-50/40 hover:bg-red-50/70"
+                          : isLowStock
+                          ? "bg-amber-50/40 hover:bg-amber-50/70"
+                          : "hover:bg-blue-50/30"
+                      }`}
+                    >
+                      <td className="py-4 px-6 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center">
+                          {u.imageUrl ? (
+                            <img
+                              src={u.imageUrl}
+                              alt={u.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Users size={16} className="text-gray-400" />
+                          )}
+                        </div>
+                        <span className="font-bold text-gray-900">{u.name}</span>
                       </td>
-                    )}
-                  </tr>
-                ))
+                      <td className="py-4 px-6 text-gray-600 font-medium">
+                        {u.category?.name}
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="px-3 py-1 bg-blue-50 text-sello-blue font-bold text-xs rounded-full uppercase tracking-wide">
+                          {u.minStockAllowed}
+                        </span>
+                      </td>
+                      <td className="py-4 px-6 text-gray-700 font-semibold">
+                        {u.unit}
+                      </td>
+                      <td className="py-4 px-6 text-gray-700 font-semibold">
+                        Rs. {Number(u.unitPrice).toFixed(2)}
+                      </td>
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`font-extrabold ${
+                              isOutOfStock
+                                ? "text-red-600"
+                                : isLowStock
+                                ? "text-amber-700"
+                                : "text-gray-900"
+                            }`}
+                          >
+                            {u.availableQty} {u.unit}
+                          </span>
+
+                          {isOutOfStock && (
+                            <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-[10px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                              <XCircle size={12} /> Out of Stock
+                            </span>
+                          )}
+
+                          {isLowStock && !isOutOfStock && (
+                            <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                              <AlertTriangle size={12} /> Low Stock
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      {user?.role === "admin" && (
+                        <td className="py-4 px-6 text-gray-700 font-semibold">
+                          {u.shop?.name}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td

@@ -63,7 +63,7 @@ export default function Layout() {
       className={`w-48 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 py-2 z-50 flex flex-col text-sm overflow-hidden ${className}`}
     >
       <button
-        className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-sello-blue transition-colors text-left w-full"
+        className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-sello-blue transition-colors text-left w-full hover:cursor-pointer"
         onClick={() => {
           navigate("/profile");
           setIsMobileMenuOpen(false);
@@ -73,14 +73,21 @@ export default function Layout() {
         <User size={16} />
         View profile
       </button>
-      <button className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-sello-blue transition-colors text-left w-full">
+      <button
+        className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-sello-blue transition-colors text-left w-full hover:cursor-pointer"
+        onClick={() => {
+          navigate("/settings");
+          setIsMobileMenuOpen(false);
+          setIsDesktopMenuOpen(false);
+        }}
+      >
         <Settings size={16} />
         Settings
       </button>
       <div className="h-px bg-gray-100 my-1"></div>
       <button
         onClick={logout}
-        className="flex items-center gap-3 px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors text-left w-full font-medium"
+        className="flex items-center gap-3 px-4 py-2.5 text-red-600 hover:bg-red-50 transition-colors text-left w-full font-medium hover:cursor-pointer"
       >
         <LogOut size={16} />
         Logout
@@ -170,9 +177,9 @@ export default function Layout() {
             >
               {user?.imageUrl ? (
                 <img
-                src={user.imageUrl}
-                alt="User"
-                className="w-full h-full object-cover"
+                  src={user.imageUrl}
+                  alt="User"
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <User size={20} className="text-gray-500" />

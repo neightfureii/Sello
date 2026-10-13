@@ -14,6 +14,9 @@ import {
   ShoppingBag,
   User2,
   LayoutGrid,
+  XCircle,
+  AlertTriangle,
+  Tag,
 } from "lucide-react";
 import ProductModal from "../components/ProductModal";
 import PaymentModal from "../components/PaymentModal";
@@ -113,7 +116,6 @@ export default function DashboardPage() {
           ...existingItem,
           quantity: existingItem.quantity + normalizedNewQty,
           discount: Number(existingItem.discount || 0) + Number(discount || 0),
-          // Optionally keep the latest display unit or keep the base unit
           displayUnit: selectedProduct.unit,
         };
         return updated;
@@ -209,7 +211,7 @@ export default function DashboardPage() {
           </h1>
         </div>
 
-        {/* Search row: avatar + search + history on mobile, search only on desktop */}
+        {/* Search row */}
         <div className="flex items-center gap-3 w-full">
           <div className="lg:hidden">{shopAvatar("w-11 h-11")}</div>
 
@@ -274,13 +276,21 @@ export default function DashboardPage() {
                 }`}
               >
                 <div className="flex-1 w-full rounded-lg lg:rounded-xl overflow-hidden">
-                  <img
-                    src={cat.imageUrl}
-                    alt={cat.name}
-                    className={`w-full h-full object-cover ${
-                      activeCategory === cat.id ? "opacity-80" : ""
-                    }`}
-                  />
+                  {cat.imageUrl ? (
+                    <img
+                      src={cat.imageUrl}
+                      alt={cat.name}
+                      className={`w-full h-full object-cover ${
+                        activeCategory === cat.id ? "opacity-80" : ""
+                      }`}
+                    />
+                  ) : (
+                    <Tag
+                      className={`w-full h-full object-cover bg-gray-50 ${
+                        activeCategory === cat.id ? "opacity-80" : "opacity-20"
+                      }`}
+                    />
+                  )}
                 </div>
                 <span
                   className={`text-[11px] lg:text-[13px] font-bold leading-none ${
@@ -296,7 +306,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Products: horizontal scroller on mobile, grid on desktop */}
+        {/* Products */}
         <div className="flex flex-col gap-3 lg:flex-1 lg:min-h-0">
           <h2 className="hidden lg:block text-[17px] font-bold text-gray-900">
             {activeCategoryName}{" "}
@@ -306,35 +316,79 @@ export default function DashboardPage() {
           </h2>
 
           <div className="flex gap-3 overflow-x-auto snap-x pb-2 -mx-1 px-1 scrollbar-hide lg:grid lg:grid-cols-3 xl:grid-cols-4 lg:auto-rows-max lg:gap-4 lg:snap-none lg:overflow-x-hidden lg:overflow-y-auto lg:flex-1 lg:min-h-0 lg:content-start lg:pb-4">
-            {filteredProducts.map((product) => (
-              <button
-                key={product.id}
-                onClick={() => {
-                  setSelectedProduct(product);
-                  setProductModalOpen(true);
-                }}
-                className="snap-start shrink-0 w-[112px] lg:w-auto bg-white rounded-xl lg:rounded-2xl border border-gray-100 shadow-md lg:shadow-sm overflow-hidden flex flex-col text-left hover:shadow-md transition-shadow cursor-pointer"
-              >
-                <div className="h-[72px] lg:h-32 w-full bg-gray-100">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-2 lg:p-3 flex flex-col flex-1 gap-3 lg:gap-4 w-full">
-                  <span className="font-bold text-gray-900 text-[11px] lg:text-[13px] leading-tight">
-                    {product.name}
-                  </span>
-                  <span className="mt-auto font-bold text-gray-900 text-[10px] lg:text-[13px] whitespace-nowrap">
-                    Rs. {Number(product.unitPrice || 0).toFixed(2)}
-                    <span className="text-[9px] lg:text-[11px]">
-                      /{unitLabel(product.unit)}
+            {filteredProducts.map((product) => {
+              const isOutOfStock = product.availableQty === 0;
+              const isLowStock =
+                product.availableQty !== undefined &&
+                product.minStockAllowed !== undefined &&
+                product.availableQty < product.minStockAllowed;
+
+              return (
+                <button
+                  key={product.id}
+                  disabled={isOutOfStock}
+                  onClick={() => {
+                    setSelectedProduct(product);
+                    setProductModalOpen(true);
+                  }}
+                  className={`snap-start shrink-0 w-[112px] lg:w-auto bg-white rounded-xl lg:rounded-2xl border shadow-md lg:shadow-sm overflow-hidden flex flex-col text-left transition-all relative ${
+                    isOutOfStock
+                      ? "opacity-60 cursor-not-allowed border-gray-100"
+                      : isLowStock
+                        ? "border-amber-300 bg-gradient-to-b from-amber-50/70 to-white hover:border-amber-400 hover:shadow-md cursor-pointer"
+                        : "border-gray-100 hover:shadow-md cursor-pointer"
+                  }`}
+                >
+                  {/* Status Badges Overlay */}
+                  {isOutOfStock && (
+                    <div className="absolute top-2.5 left-2.5 z-10 bg-red-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider flex items-center gap-1">
+                      <XCircle size={12} /> Out of Stock
+                    </div>
+                  )}
+                  {isLowStock && !isOutOfStock && (
+                    <div className="absolute top-2.5 left-2.5 z-10 bg-amber-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-sm uppercase tracking-wider flex items-center gap-1">
+                      <AlertTriangle size={12} /> Low Stock
+                    </div>
+                  )}
+
+                  <div className="h-[72px] lg:h-32 w-full bg-gray-100">
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="p-2 lg:p-3 flex flex-col flex-1 gap-2 lg:gap-3 w-full">
+                    <span className="font-bold text-gray-900 text-[11px] lg:text-[13px] leading-tight">
+                      {product.name}
                     </span>
-                  </span>
-                </div>
-              </button>
-            ))}
+
+                    {/* Price and Available Quantity row */}
+                    <div className="flex items-center justify-between mt-auto">
+                      <span className="font-bold text-gray-900 text-[10px] lg:text-[13px] whitespace-nowrap">
+                        Rs. {Number(product.unitPrice || 0).toFixed(2)}
+                        <span className="text-[9px] lg:text-[11px]">
+                          /{unitLabel(product.unit)}
+                        </span>
+                      </span>
+                      {product.availableQty !== undefined && (
+                        <span
+                          className={`text-[10px] lg:text-[11px] font-extrabold px-1.5 py-0.5 rounded-md ${
+                            isOutOfStock
+                              ? "bg-red-100 text-red-700"
+                              : isLowStock
+                                ? "bg-amber-100 text-amber-800"
+                                : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          Qty: {product.availableQty}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
           </div>
 
           {filteredProducts.length === 0 && (

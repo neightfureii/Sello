@@ -136,29 +136,28 @@ export default function UsersPage() {
                       {u.shop?.name || "Global / Unassigned"}
                     </td>
                     <td className="py-4 px-6">
-                      <span className="flex gap-8 justify-end mr-10">
-                        <button
-                          className="hover:cursor-pointer"
-                          onClick={() => {
-                            setEditUserModalOpen(true);
-                            setSelectedUser(u);
-                          }}
-                        >
-                          <PencilIcon className="text-sello-blue" />
-                        </button>
-                        <button
-                          className="hover:cursor-pointer"
-                          onClick={() => {
-                            setItemToDeleteId(u.id);
-                            setDeleteModalOpen(true);
-                          }}
-                          disabled={user?.id == u.id}
-                        >
-                          <TrashIcon
-                            className={`${user?.id == u.id ? "text-gray-200" : "text-red-500"}`}
-                          />
-                        </button>
-                      </span>
+                      {user?.id !== u.id && (
+                        <span className="flex gap-8 justify-end mr-10">
+                          <button
+                            className="hover:cursor-pointer"
+                            onClick={() => {
+                              setEditUserModalOpen(true);
+                              setSelectedUser(u);
+                            }}
+                          >
+                            <PencilIcon className="text-sello-blue" />
+                          </button>
+                          <button
+                            className="hover:cursor-pointer"
+                            onClick={() => {
+                              setItemToDeleteId(u.id);
+                              setDeleteModalOpen(true);
+                            }}
+                          >
+                            <TrashIcon className="text-red-500" />
+                          </button>
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))

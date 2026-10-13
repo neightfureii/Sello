@@ -1,16 +1,20 @@
 import { useState, type FormEvent } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { User, Store, Camera, Save } from "lucide-react";
+import { User, Store, Camera, Save, Edit3 } from "lucide-react";
 import { apiUrl } from "../api";
+import EditShopModal from "../components/EditShopModal";
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const [editShopModalOpen, setEditShopModalOpen] = useState(false);
 
   const [fullName, setFullName] = useState(user?.fullName || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(user?.imageUrl || null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    user?.imageUrl || null,
+  );
   const [loading, setLoading] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,8 +45,6 @@ export default function ProfilePage() {
       if (!response.ok) throw new Error("Failed to update profile");
 
       showToast("Profile successfully updated!", "success");
-      
-      // Optional: reload to sync AuthContext state with updated user info
       window.location.reload();
     } catch (err: any) {
       showToast(err.message || "Could not update profile", "error");
@@ -60,24 +62,31 @@ export default function ProfilePage() {
         </div>
         <div>
           <h2 className="text-xl font-extrabold text-gray-900">My Profile</h2>
-          <p className="text-xs text-gray-500 font-medium">Manage your personal account settings</p>
+          <p className="text-xs text-gray-500 font-medium">
+            Manage your personal account settings
+          </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
         {/* LEFT COLUMN: Edit Form */}
         <form
           onSubmit={handleSubmit}
           className="md:col-span-2 bg-white rounded-3xl p-6 lg:p-8 shadow-sm border border-gray-100 flex flex-col gap-5"
         >
-          <h3 className="text-sm font-extrabold text-gray-900">Edit Information</h3>
+          <h3 className="text-sm font-extrabold text-gray-900">
+            Edit Information
+          </h3>
 
           {/* Profile Picture Uploader */}
           <div className="flex items-center gap-5">
             <div className="w-20 h-20 rounded-2xl bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center shrink-0 relative group">
               {previewUrl ? (
-                <img src={previewUrl} alt="Profile" className="w-full h-full object-cover" />
+                <img
+                  src={previewUrl}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <User className="text-gray-400" size={28} />
               )}
@@ -92,8 +101,12 @@ export default function ProfilePage() {
               </label>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-bold text-gray-700">Profile Photo</label>
-              <p className="text-[11px] text-gray-400">Click image to upload a new avatar</p>
+              <label className="text-xs font-bold text-gray-700">
+                Profile Photo
+              </label>
+              <p className="text-[11px] text-gray-400">
+                Click image to upload a new avatar
+              </p>
               <input
                 type="file"
                 accept="image/*"
@@ -117,7 +130,9 @@ export default function ProfilePage() {
 
           {/* Email (Readonly) */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-700">Email Address (Read-only)</label>
+            <label className="text-xs font-bold text-gray-700">
+              Email Address (Read-only)
+            </label>
             <div className="w-full bg-gray-100 border border-transparent rounded-xl px-4 py-3 text-sm text-gray-500 font-medium select-none">
               {user?.email}
             </div>
@@ -125,7 +140,9 @@ export default function ProfilePage() {
 
           {/* Role (Readonly) */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-gray-700">System Role</label>
+            <label className="text-xs font-bold text-gray-700">
+              System Role
+            </label>
             <div className="w-full bg-gray-100 border border-transparent rounded-xl px-4 py-3 text-sm text-gray-500 font-medium uppercase tracking-wider select-none">
               {user?.role}
             </div>
@@ -143,37 +160,79 @@ export default function ProfilePage() {
         </form>
 
         {/* RIGHT COLUMN: Shop Details Card */}
-        <div className="bg-[#f0f4fa] rounded-3xl p-6 shadow-sm border border-blue-50 flex flex-col gap-4 h-fit">
-          <div className="flex items-center gap-2.5 text-sello-blue">
-            <Store size={20} />
-            <h3 className="text-sm font-extrabold text-gray-900">Assigned Shop</h3>
+        <div className="bg-[#f0f4fa] rounded-3xl p-6 shadow-sm border border-blue-50 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5 text-sello-blue">
+              <Store size={20} />
+              <h3 className="text-sm font-extrabold text-gray-900">
+                Assigned Shop
+              </h3>
+            </div>
+
+            {user?.shop && (
+              <button
+                onClick={() => setEditShopModalOpen(true)}
+                className="p-1.5 text-sello-blue hover:bg-blue-100/70 rounded-full transition-colors cursor-pointer"
+                title="Edit Shop"
+              >
+                <Edit3 size={16} />
+              </button>
+            )}
           </div>
 
           {user?.shop ? (
             <div className="flex flex-col gap-3">
               {user.shop.imageUrl && (
-                <div className="w-full h-32 rounded-2xl overflow-hidden shadow-xs">
-                  <img src={user.shop.imageUrl} alt={user.shop.name} className="w-full h-full object-cover" />
+                <div className="w-full h-100 rounded-2xl overflow-hidden shadow-xs">
+                  <img
+                    src={user.shop.imageUrl}
+                    alt={user.shop.name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               )}
               <div className="flex flex-col">
-                <span className="text-xs text-gray-500 font-medium">Shop Name</span>
-                <span className="text-sm font-bold text-gray-900">{user.shop.name}</span>
+                <span className="text-xs text-gray-500 font-medium">
+                  Shop Name
+                </span>
+                <span className="text-sm font-bold text-gray-900">
+                  {user.shop.name}
+                </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-xs text-gray-500 font-medium">Location</span>
-                <span className="text-sm font-bold text-gray-800">{user.shop.location || "N/A"}</span>
+                <span className="text-xs text-gray-500 font-medium">
+                  Location
+                </span>
+                <span className="text-sm font-bold text-gray-800">
+                  {user.shop.location || "N/A"}
+                </span>
               </div>
               <div className="flex flex-col">
-                <span className="text-xs text-gray-500 font-medium">Shop Type</span>
-                <span className="text-sm font-bold text-gray-800 capitalize">{user.shop.type}</span>
+                <span className="text-xs text-gray-500 font-medium">
+                  Shop Type
+                </span>
+                <span className="text-sm font-bold text-gray-800 capitalize">
+                  {user.shop.type}
+                </span>
               </div>
             </div>
           ) : (
-            <p className="text-xs text-gray-500">No shop assigned to this account.</p>
+            <p className="text-xs text-gray-500">
+              No shop assigned to this account.
+            </p>
           )}
         </div>
 
+        {editShopModalOpen && user?.shop && (
+          <EditShopModal
+            shop={user.shop}
+            isOpen={editShopModalOpen}
+            onClose={() => setEditShopModalOpen(false)}
+            onEditComplete={() => {
+              window.location.reload();
+            }}
+          />
+        )}
       </div>
     </div>
   );

@@ -71,20 +71,31 @@ router.post("/", async (req, res) => {
         // Fetch all available stock batches for this product in this shop, oldest first.
         // (Note: You can calculate remaining quantity per stock batch by checking total quantityReceived minus what's already been sold,
         // or track remaining quantity directly. For simplicity in standard POS, we fetch active batches ordered by acquisition.)
+        console.log("blablabla:::::", productId, shopId);
         const availableStocks = await tx.stock.findMany({
           where: {
             productId,
             shopId,
+            stockRecord: {
+              is: { status: { not: "reverted" } },
+            },
           },
           orderBy: { dateAcquired: "asc" },
         });
+
+        console.log("Available stocks:::::", availableStocks);
 
         for (const batch of availableStocks) {
           if (remainingQtyToDeduct <= 0) break;
 
           // Calculate how much has already been sold from this specific batch
           const soldAggregate = await tx.saleItem.aggregate({
-            where: { stockId: batch.id },
+            where: {
+              stockId: batch.id,
+              sale: {
+                is: { status: { not: "reverted" } },
+              },
+            },
             _sum: { quantity: true },
           });
           const soldQtyFromBatch = soldAggregate._sum.quantity || 0;

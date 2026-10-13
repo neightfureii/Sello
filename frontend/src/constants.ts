@@ -36,3 +36,5 @@ export const SHOP_TYPE_DETAILS = [
   { value: Shop_Type.grocery, label: "Grocery" },
   { value: Shop_Type.hardware, label: "Hardware" },
 ] as const;
+
+export type ModalType = "income" | "expense" | "capital" | "withdrawal";
