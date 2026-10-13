@@ -20,6 +20,8 @@ import ProductsPage from "./pages/ProductsPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import StocksPage from "./pages/StocksPage";
 import SettingsPage from "./pages/SettingsPage";
+import ShopAccountPage from "./pages/ShopAccountPage";
+import OwnerAccountPage from "./pages/OwnerAccountPage";
 
 export const router = createBrowserRouter([
   { path: "/login", element: <LoginPage /> },
@@ -64,6 +66,8 @@ export const router = createBrowserRouter([
           { path: "settings", element: <SettingsPage /> },
           { path: "analytics", element: <AnalyticsPage /> },
           { path: "accounts", element: <AccountsPage /> },
+          { path: "accounts/shop-account", element: <ShopAccountPage /> },
+          { path: "accounts/owner-account", element: <OwnerAccountPage /> },
         ],
       },
     ],
