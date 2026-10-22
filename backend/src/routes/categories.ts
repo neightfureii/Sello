@@ -50,8 +50,8 @@ router.post(
           name,
           description,
           shopId,
-          imageUrl, // Storing the URL string
-          imageCldPubId, // Storing the Cloudinary Public ID for future deletions/updates
+          imageUrl,
+          imageCldPubId,
         },
       });
       res.status(201).json({ newCategory });

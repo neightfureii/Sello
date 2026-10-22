@@ -120,7 +120,6 @@ export default function AddProductPage() {
           required
         />
 
-        {/* Category Dropdown */}
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-bold text-gray-700">Category</label>
           <select
