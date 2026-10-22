@@ -75,7 +75,7 @@ export default function AddUserPage() {
         `Staff account for ${form.fullName} created successfully!`,
         "success",
       );
-      navigate(-1); // Go back to the users list
+      navigate(-1);
     } catch (err: any) {
       setError(err.message || "Could not create staff account");
       showToast(err.message || "Could not create staff account", "error");
@@ -93,7 +93,7 @@ export default function AddUserPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-3xl p-6 lg:p-8 flex flex-col gap-5"
+        className="bg-white rounded-3xl p-6 lg:p-8 shadow-sm border border-gray-100 flex flex-col gap-5"
       >
         {/* Profile Image Preview & Uploader */}
         <div className="flex items-center gap-5">

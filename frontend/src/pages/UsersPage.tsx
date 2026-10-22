@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, apiUrl, type User } from "../api";
 import { useToast } from "../context/ToastContext";
-import { PencilIcon, TrashIcon, User2, UserPlus, Users } from "lucide-react";
+import { PencilIcon, TrashIcon, User2, UserPlus, Users, Search, ArrowUpDown, ChevronDown, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import DeleteConfirmModal from "../components/DeleteConfirmModal";
@@ -12,10 +12,13 @@ export default function UsersPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "role">("name");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+
   const [editUserModalOpen, setEditUserModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  // delete item
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDeleteId, setItemToDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -35,7 +38,7 @@ export default function UsersPage() {
 
       if (!response.ok) throw new Error("Failed to delete item");
 
-      showToast("Successfully deleted item", "success");
+      showToast("Successfully deleted user", "success");
       setDeleteModalOpen(false);
       setItemToDeleteId(null);
       loadData();
@@ -46,9 +49,7 @@ export default function UsersPage() {
     }
   };
 
-  // Load users
   const loadData = useCallback(() => {
-    // Fetch users list
     api<{ users: User[] } | User[]>("/auth/users")
       .then((d) => {
         const data = Array.isArray(d) ? d : d?.users;
@@ -61,8 +62,17 @@ export default function UsersPage() {
 
   useEffect(loadData, [loadData]);
 
+  const filteredUsers = users.filter((u) =>
+    u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+  ).sort((a, b) => {
+    if (sortBy === "name") return a.fullName.localeCompare(b.fullName);
+    if (sortBy === "role") return a.role.localeCompare(b.role);
+    return 0;
+  });
+
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col gap-6 p-6 relative">
       {/* Top Header & Action */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -88,6 +98,52 @@ export default function UsersPage() {
         </button>
       </div>
 
+      {/* Search & Sort Bar */}
+      <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search by name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-[#e5edfa] border border-transparent focus:bg-white focus:border-sello-blue outline-none rounded-full py-3 pl-11 pr-4 text-sm text-gray-800 placeholder-gray-500 font-medium transition-all"
+          />
+        </div>
+
+        <div className="relative">
+          <div
+            onClick={() => setIsSortOpen(!isSortOpen)}
+            className="flex items-center gap-2 bg-[#e5edfa] hover:bg-blue-100/70 text-gray-700 px-4 py-3 rounded-full text-sm font-semibold transition-colors cursor-pointer select-none"
+          >
+            <ArrowUpDown size={16} className="text-gray-500" />
+            <span>Sort: {sortBy === "name" ? "Name" : "Role"}</span>
+            <ChevronDown size={16} className="text-gray-500" />
+          </div>
+
+          {isSortOpen && (
+            <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 z-30">
+              {[
+                { id: "name", label: "Name (A-Z)" },
+                { id: "role", label: "System Role" },
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => {
+                    setSortBy(option.id as any);
+                    setIsSortOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-xs font-bold flex items-center justify-between hover:bg-blue-50 text-gray-700 transition-colors cursor-pointer"
+                >
+                  {option.label}
+                  {sortBy === option.id && <Check size={14} className="text-sello-blue" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Users Table */}
       <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -102,8 +158,8 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
-              {users.length > 0 ? (
-                users.map((u) => (
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map((u) => (
                   <tr
                     key={u.id}
                     className="hover:bg-blue-50/30 transition-colors"
@@ -164,7 +220,7 @@ export default function UsersPage() {
               ) : (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="py-8 text-center text-gray-400 text-sm font-medium"
                   >
                     No staff accounts found.

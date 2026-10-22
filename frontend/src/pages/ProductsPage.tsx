@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type Product } from "../api";
 import { useToast } from "../context/ToastContext";
-import { Plus, Users, XCircle, AlertTriangle } from "lucide-react";
+import { Plus, Users, XCircle, AlertTriangle, Search, ArrowUpDown, ChevronDown, Check, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import BackButton from "../components/BackButton";
 import { useAuth } from "../auth/AuthContext";
@@ -11,6 +11,13 @@ export default function ProductsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
+  
+  // Search, Sort, and Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "price-high" | "price-low" | "qty-low">("name");
+  const [statusFilter, setStatusFilter] = useState<"all" | "low" | "out">("all");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
 
   const loadData = useCallback(() => {
     api<{ products: Product[] } | Product[]>("/products")
@@ -25,8 +32,34 @@ export default function ProductsPage() {
 
   useEffect(loadData, [loadData]);
 
+  // Filtering and Sorting logic
+  const filteredProducts = products.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+
+    const isOutOfStock = p.availableQty === 0;
+    const isLowStock =
+      p.availableQty !== undefined &&
+      p.minStockAllowed !== undefined &&
+      p.availableQty > 0 &&
+      p.availableQty < p.minStockAllowed;
+
+    if (statusFilter === "out" && !isOutOfStock) return false;
+    if (statusFilter === "low" && !isLowStock) return false;
+
+    return true;
+  }).sort((a, b) => {
+    if (sortBy === "name") return a.name.localeCompare(b.name);
+    if (sortBy === "price-high") return Number(b.unitPrice) - Number(a.unitPrice);
+    if (sortBy === "price-low") return Number(a.unitPrice) - Number(b.unitPrice);
+    if (sortBy === "qty-low") return Number(a.availableQty) - Number(b.availableQty);
+    return 0;
+  });
+
+  const totalColumns = user?.role === "admin" ? 7 : 6;
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 relative">
       {/* Top Header & Action */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4 top-0 sticky backdrop-blur-sm bg-white/80 rounded-full p-4 z-10">
@@ -41,6 +74,107 @@ export default function ProductsPage() {
           <Plus size={16} />
           Add New Product
         </button>
+      </div>
+
+      {/* Search, Status Filter & Sort Controls Bar */}
+      <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+        {/* Search Bar */}
+        <div className="relative flex-1 w-full">
+          <Search
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            size={18}
+          />
+          <input
+            type="text"
+            placeholder="Search products by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-[#e5edfa] border border-transparent focus:bg-white focus:border-sello-blue outline-none rounded-full py-3 pl-11 pr-4 text-sm text-gray-800 placeholder-gray-500 font-medium transition-all"
+          />
+        </div>
+
+        <div className="flex items-center gap-3 w-full sm:w-auto relative">
+          
+          {/* STATUS FILTER DROPDOWN */}
+          <div className="relative">
+            <div
+              onClick={() => {
+                setIsStatusOpen(!isStatusOpen);
+                setIsSortOpen(false);
+              }}
+              className="flex items-center gap-2 bg-[#e5edfa] hover:bg-blue-100/70 text-gray-700 px-4 py-3 rounded-full text-sm font-semibold transition-colors cursor-pointer select-none"
+            >
+              <Filter size={16} className="text-gray-500" />
+              <span>
+                {statusFilter === "all" ? "All Status" : statusFilter === "low" ? "Low Stock" : "Out of Stock"}
+              </span>
+              <ChevronDown size={16} className="text-gray-500" />
+            </div>
+
+            {isStatusOpen && (
+              <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 z-30">
+                {[
+                  { id: "all", label: "All Products" },
+                  { id: "low", label: "Low Stock Only" },
+                  { id: "out", label: "Out of Stock Only" },
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      setStatusFilter(option.id as any);
+                      setIsStatusOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-xs font-bold flex items-center justify-between hover:bg-blue-50 text-gray-700 transition-colors cursor-pointer"
+                  >
+                    {option.label}
+                    {statusFilter === option.id && <Check size={14} className="text-sello-blue" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* SORT BY DROPDOWN */}
+          <div className="relative">
+            <div
+              onClick={() => {
+                setIsSortOpen(!isSortOpen);
+                setIsStatusOpen(false);
+              }}
+              className="flex items-center gap-2 bg-[#e5edfa] hover:bg-blue-100/70 text-gray-700 px-4 py-3 rounded-full text-sm font-semibold transition-colors cursor-pointer select-none"
+            >
+              <ArrowUpDown size={16} className="text-gray-500" />
+              <span>
+                Sort: {sortBy === "name" ? "Name" : sortBy === "price-high" ? "Highest Price" : sortBy === "price-low" ? "Lowest Price" : "Lowest Qty"}
+              </span>
+              <ChevronDown size={16} className="text-gray-500" />
+            </div>
+
+            {isSortOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 z-30">
+                {[
+                  { id: "name", label: "Alphabetical (A-Z)" },
+                  { id: "price-high", label: "Highest Price" },
+                  { id: "price-low", label: "Lowest Price" },
+                  { id: "qty-low", label: "Lowest Available Qty" },
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      setSortBy(option.id as any);
+                      setIsSortOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-xs font-bold flex items-center justify-between hover:bg-blue-50 text-gray-700 transition-colors cursor-pointer"
+                  >
+                    {option.label}
+                    {sortBy === option.id && <Check size={14} className="text-sello-blue" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
       </div>
 
       {/* Products Table */}
@@ -59,8 +193,8 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
-              {products.length > 0 ? (
-                products.map((u: Product) => {
+              {filteredProducts.length > 0 ? (
+                filteredProducts.map((u: Product) => {
                   const isOutOfStock = u.availableQty === 0;
                   const isLowStock =
                     u.availableQty !== undefined &&
@@ -136,7 +270,7 @@ export default function ProductsPage() {
                       </td>
                       {user?.role === "admin" && (
                         <td className="py-4 px-6 text-gray-700 font-semibold">
-                          {u.shop?.name}
+                          {u.shop?.name || "N/A"}
                         </td>
                       )}
                     </tr>
@@ -145,10 +279,10 @@ export default function ProductsPage() {
               ) : (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={totalColumns}
                     className="py-8 text-center text-gray-400 text-sm font-medium"
                   >
-                    No products found.
+                    No products found matching your search or filters.
                   </td>
                 </tr>
               )}
