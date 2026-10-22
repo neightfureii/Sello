@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import BackButton from "../components/BackButton";
 import { api, type StockRecord } from "../api";
-import { Search, Calendar, ChevronDown, ArrowUpDown } from "lucide-react";
+import { Search, Calendar, ChevronDown, ArrowUpDown, Check } from "lucide-react";
 import { useToast } from "../context/ToastContext";
 import StockRecordModal from "../components/StockRecordModal";
 import { useAuth } from "../auth/AuthContext";
@@ -15,6 +15,12 @@ export default function StocksPage() {
   const [stockRecordModalOpen, setStockRecordModalOpen] = useState(false);
   const [selectedStockRecord, setSelectedStockRecord] =
     useState<StockRecord | null>(null);
+
+  // Filter & Sort States
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "highest" | "lowest">("newest");
+  const [dateFilter, setDateFilter] = useState<"all" | "7days" | "month">("all");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isDateOpen, setIsDateOpen] = useState(false);
 
   const loadStockRecords = useCallback(() => {
     setLoading(true);
@@ -33,17 +39,45 @@ export default function StocksPage() {
     loadStockRecords();
   }, [loadStockRecords]);
 
-  // Filter stock records based on search query (invoice no or payment method)
+  // Filter and sort logic
   const filteredStockRecords = stockRecords.filter((s) => {
     const query = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       s.stockReference?.toLowerCase().includes(query) ||
-      s.paymentSource?.toLowerCase().includes(query)
-    );
+      s.paymentSource?.toLowerCase().includes(query);
+
+    if (!matchesSearch) return false;
+
+    if (dateFilter !== "all") {
+      const recordDate = new Date(s.createdAt).getTime();
+      const now = new Date().getTime();
+      const diffDays = (now - recordDate) / (1000 * 60 * 60 * 24);
+
+      if (dateFilter === "7days" && diffDays > 7) return false;
+      if (dateFilter === "month" && diffDays > 30) return false;
+    }
+
+    return true;
+  }).sort((a, b) => {
+    if (sortBy === "newest") {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    if (sortBy === "oldest") {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    }
+    if (sortBy === "highest") {
+      return Number(b.totalAmount) - Number(a.totalAmount);
+    }
+    if (sortBy === "lowest") {
+      return Number(a.totalAmount) - Number(b.totalAmount);
+    }
+    return 0;
   });
 
+  const totalColumns = user?.role === "admin" ? 6 : 5;
+
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 relative">
       <div className="flex items-center gap-4 top-0 sticky backdrop-blur-sm bg-white/80 rounded-full p-4 z-10">
         <BackButton />
         <h3 className="font-bold text-gray-900 text-base">Stock Records</h3>
@@ -59,7 +93,7 @@ export default function StocksPage() {
           />
           <input
             type="text"
-            placeholder="Search by Ref No"
+            placeholder="Search by Ref No or payment source..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[#e5edfa] border border-transparent focus:bg-white focus:border-sello-blue outline-none rounded-full py-3 pl-11 pr-4 text-sm text-gray-800 placeholder-gray-500 font-medium transition-all"
@@ -67,18 +101,87 @@ export default function StocksPage() {
         </div>
 
         {/* Sort By & Date Range Dropdown Badges */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <div className="flex items-center gap-2 bg-[#e5edfa] hover:bg-blue-100/70 text-gray-700 px-4 py-3 rounded-full text-sm font-semibold transition-colors cursor-pointer select-none">
-            <ArrowUpDown size={16} className="text-gray-500" />
-            <span>Sort by</span>
-            <ChevronDown size={16} className="text-gray-500" />
+        <div className="flex items-center gap-3 w-full sm:w-auto relative">
+          
+          {/* SORT DROPDOWN */}
+          <div className="relative">
+            <div
+              onClick={() => {
+                setIsSortOpen(!isSortOpen);
+                setIsDateOpen(false);
+              }}
+              className="flex items-center gap-2 bg-[#e5edfa] hover:bg-blue-100/70 text-gray-700 px-4 py-3 rounded-full text-sm font-semibold transition-colors cursor-pointer select-none"
+            >
+              <ArrowUpDown size={16} className="text-gray-500" />
+              <span>
+                Sort: {sortBy === "newest" ? "Newest" : sortBy === "oldest" ? "Oldest" : sortBy === "highest" ? "Highest Amount" : "Lowest Amount"}
+              </span>
+              <ChevronDown size={16} className="text-gray-500" />
+            </div>
+
+            {isSortOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 z-30">
+                {[
+                  { id: "newest", label: "Newest First" },
+                  { id: "oldest", label: "Oldest First" },
+                  { id: "highest", label: "Highest Amount" },
+                  { id: "lowest", label: "Lowest Amount" },
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      setSortBy(option.id as any);
+                      setIsSortOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-xs font-bold flex items-center justify-between hover:bg-blue-50 text-gray-700 transition-colors cursor-pointer"
+                  >
+                    {option.label}
+                    {sortBy === option.id && <Check size={14} className="text-sello-blue" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 bg-[#e5edfa] hover:bg-blue-100/70 text-gray-700 px-4 py-3 rounded-full text-sm font-semibold transition-colors cursor-pointer select-none">
-            <Calendar size={16} className="text-gray-500" />
-            <span>02/07/2026 - 02/08/2026</span>
-            <ChevronDown size={16} className="text-gray-500" />
+          {/* DATE FILTER DROPDOWN */}
+          <div className="relative">
+            <div
+              onClick={() => {
+                setIsDateOpen(!isDateOpen);
+                setIsSortOpen(false);
+              }}
+              className="flex items-center gap-2 bg-[#e5edfa] hover:bg-blue-100/70 text-gray-700 px-4 py-3 rounded-full text-sm font-semibold transition-colors cursor-pointer select-none"
+            >
+              <Calendar size={16} className="text-gray-500" />
+              <span>
+                {dateFilter === "all" ? "All Time" : dateFilter === "7days" ? "Last 7 Days" : "Last 30 Days"}
+              </span>
+              <ChevronDown size={16} className="text-gray-500" />
+            </div>
+
+            {isDateOpen && (
+              <div className="absolute right-0 mt-2 w-44 bg-white rounded-2xl shadow-lg border border-gray-100 py-2 z-30">
+                {[
+                  { id: "all", label: "All Time" },
+                  { id: "7days", label: "Last 7 Days" },
+                  { id: "month", label: "Last 30 Days" },
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      setDateFilter(option.id as any);
+                      setIsDateOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-xs font-bold flex items-center justify-between hover:bg-blue-50 text-gray-700 transition-colors cursor-pointer"
+                  >
+                    {option.label}
+                    {dateFilter === option.id && <Check size={14} className="text-sello-blue" />}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
         </div>
       </div>
 
@@ -100,7 +203,7 @@ export default function StocksPage() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={totalColumns}
                     className="py-8 text-center text-gray-400 font-medium"
                   >
                     Loading stock records...
@@ -148,14 +251,16 @@ export default function StocksPage() {
                       </td>
                       <td>
                         <span
-                          className={`font-bold ${isReverted ?? "text-rose-600"}`}
+                          className={`font-bold capitalize px-2 py-1 rounded-md text-xs ${
+                            isReverted ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"
+                          }`}
                         >
                           {stockRecord.status}
                         </span>
                       </td>
                       {user?.role === "admin" && (
-                        <td className="py-4 px-6 text-gray-900">
-                        {stockRecord.shop.name}
+                        <td className="py-4 px-6 font-bold text-gray-900">
+                        {stockRecord.shop?.name || "N/A"}
                       </td>
                       )}
                     </tr>
@@ -164,7 +269,7 @@ export default function StocksPage() {
               ) : (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={totalColumns}
                     className="py-8 text-center text-gray-400 font-medium"
                   >
                     No stock records found.

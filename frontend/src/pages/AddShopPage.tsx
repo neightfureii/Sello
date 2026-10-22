@@ -68,13 +68,16 @@ export default function AddShopPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-4 top-0 sticky backdrop-blur-sm bg-white/80 rounded-full p-4">
+      <div className="flex items-center gap-4 top-0 sticky backdrop-blur-sm bg-white/80 rounded-full p-4 z-10">
         <BackButton />
         <h3 className="font-bold text-gray-900 text-base">Add New Shop</h3>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-6 lg:p-8 flex flex-col gap-5">
-        {/* Profile Image Preview & Uploader */}
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-3xl p-6 lg:p-8 shadow-sm border border-gray-100 flex flex-col gap-5"
+      >
+        {/* Shop Logo Preview & Uploader */}
         <div className="flex items-center gap-5">
           <div className="w-20 h-20 rounded-2xl bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center shrink-0 relative">
             {previewUrl ? (
@@ -100,7 +103,7 @@ export default function AddShopPage() {
 
         <InputField
           label="Shop Name"
-          placeholder="A.B.C. Perera"
+          placeholder="Sello Branch 01"
           type="text"
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -126,7 +129,6 @@ export default function AddShopPage() {
             className="w-full bg-[#f0f4fa] border border-transparent focus:bg-white focus:border-sello-blue outline-none rounded-xl px-4 py-3 text-sm text-gray-800 font-medium transition-all cursor-pointer"
           >
             <option value="">Select a type</option>
-
             {SHOP_TYPE_DETAILS.map((t) => (
               <option key={t.value} value={t.value}>
                 {t.label}
