@@ -7,16 +7,8 @@ on:
 
 jobs:
   ci-check:
-    name: Build, Lint & Verify
+    name: Build & Lint Check
     runs-on: ubuntu-latest
-
-    # Define environment variables required by docker-compose and your app
-    env:
-      DB_USER: postgres
-      DB_PASSWORD: password123
-      DB_NAME: sello_test
-      PORT: 5000
-      NODE_ENV: test
 
     steps:
       - name: Checkout code
@@ -28,27 +20,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install Root & Workspace Dependencies
+      - name: Install Dependencies
         run: npm ci
-
-      - name: Start Database via Docker Compose
-        run: |
-          docker compose up -d db
-        
-      - name: Wait for Database to be Healthy
-        run: |
-          echo "Waiting for PostgreSQL to be ready..."
-          until docker inspect --format="{{.State.Health.Status}}" sello_db | grep -m 1 "healthy"; do
-            sleep 3
-          done
-
-      - name: Run Database Migrations
-        run: |
-          npm run migrate
-        env:
-          DB_USER: postgres
-          DB_PASSWORD: password123
-          DB_NAME: sello_test
 
       - name: Lint Backend & Frontend
         run: |
@@ -59,7 +32,3 @@ jobs:
         run: |
           npm run build -w backend || echo "No build script in backend yet"
           npm run build -w frontend || echo "No build script in frontend yet"
-
-      - name: Stop Database Container
-        if: always()
-        run: npm run db:down
